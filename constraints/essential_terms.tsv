@@ -1,0 +1,33 @@
+term	category	Function
+GO:0042254	Core	Ribosome biogenesis
+GO:0015031	Core	Protein export
+GO:0006351	Core	Transcription
+GO:0016070	Core	RNA metabolism
+GO:0007059	Core	Chromosome segregation
+GO:0006259	Core	DNA metabolism
+GO:0006457	Core	Protein folding
+GO:0006412	Core	Translation
+GO:0032774	Core	RNA (rRNAs, tRNAs, small RNAs)
+GO:0006260	Core	DNA replication
+GO:0006629	Core	Lipid salvage and biogenesis
+GO:0000154	Core	rRNA modification
+GO:0006400	Core	tRNA modification
+GO:0006281	Core	DNA repair
+GO:0008152	Core	Metabolic process
+GO:0055085	Core	Membrane transport
+GO:0045454	Core	Redox homeostasis
+GO:0006508	Core	Proteolysis
+GO:0050789	Core	Regulation
+GO:0051301	Core	Cell division
+GO:0015849	Core	Transport of nonglucose carbon sources
+GO:0016054	Core	Catabolism of nonglucose carbon sources
+GO:0006096	Glucose Metabolism	Glycolysis
+GO:1904659	Glucose Metabolism	Glucose transport
+GO:0032196	Environemntal Adaptation	Mobile elements
+GO:0071103	Environemntal Adaptation	DNA topology
+GO:0042157	Environemntal Adaptation	Lipoprotein
+GO:0090482	Nutrient Uptake	Cofactor transport and salvage
+GO:0046464	Nutrient Uptake	Acylglycerol breakdown
+GO:0043173	Nutrient Uptake	Nucleotide salvage
+GO:0009307	Defense	DNA restriction
+GO:0140115	Defense	Efflux
