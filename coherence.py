@@ -1,4 +1,7 @@
 import ast
+import re
+from collections import defaultdict
+
 #### PROCESS COHERENCE ####
 def parse_has_part(file_path):
     """
@@ -111,4 +114,91 @@ def analyze_genome(protein_go_terms, pathway_to_go):
 
     return completeness_results, completed_pathways, annotated_pathways
 
-#### PATHWAY COHERENCE ####
+#### COMPLEX COHERENCE ####
+MACROMOLECULAR_COMPLEX = "GO:0032991"
+HOMODIMERIZATION = "GO:0042803"
+
+def classify_complexes(protein_go_terms, complex_child_terms, homodimer_terms=None):
+    complex_term_to_proteins = defaultdict(set)
+    for protein_id, terms in protein_go_terms.items():
+        if MACROMOLECULAR_COMPLEX in terms:
+            protein_complex_terms = complex_child_terms.intersection(terms)
+            for term in protein_complex_terms:
+                complex_term_to_proteins[term].add(protein_id)
+
+    complex_classifications = {}
+    for term, proteins in complex_term_to_proteins.items():
+        if homodimer_terms and term in homodimer_terms:
+            complex_classifications[term] = "coherent"
+        elif len(proteins) > 1:
+            complex_classifications[term] = "coherent"
+        else:
+            complex_classifications[term] = "incoherent"
+
+    return complex_classifications, complex_term_to_proteins
+
+
+def count_complexes(complex_classifications):
+    coherent_count = sum(1 for c in complex_classifications.values() if c == "coherent")
+    incoherent_count = sum(1 for c in complex_classifications.values() if c == "incoherent")
+    return coherent_count, incoherent_count
+
+
+def parse_go_ontology(file_path):
+    term_to_children = defaultdict(set)
+    term_to_parents = defaultdict(set)
+    term_to_definition = {}
+
+    current_term = None
+    term_id = None
+
+    with open(file_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line == '[Term]':
+                current_term = True
+                term_id = None
+                continue
+            if line == '' and current_term:
+                current_term = False
+                continue
+            if not current_term:
+                continue
+            if line.startswith('id:'):
+                term_id = line.split('id:')[1].strip()
+                continue
+            if line.startswith('def:'):
+                if term_id:
+                    definition = line.split('def:')[1].strip()
+                    match = re.search(r'"([^"]*)"', definition)
+                    term_to_definition[term_id] = match.group(1) if match else definition
+                continue
+            if line.startswith('is_a:'):
+                if term_id:
+                    parent_id = line.split('is_a:')[1].split('!')[0].strip()
+                    term_to_parents[term_id].add(parent_id)
+                    term_to_children[parent_id].add(term_id)
+                continue
+            if line.startswith('relationship: part_of'):
+                if term_id:
+                    parent_id = line.split('part_of')[1].split('!')[0].strip()
+                    term_to_parents[term_id].add(parent_id)
+                    term_to_children[parent_id].add(term_id)
+
+    return term_to_children, term_to_parents, term_to_definition
+
+
+def get_all_child_terms(term_id, term_to_children, recursive=True):
+    if not recursive:
+        return term_to_children.get(term_id, set())
+
+    all_children = set()
+    to_process = list(term_to_children.get(term_id, set()))
+
+    while to_process:
+        child = to_process.pop()
+        if child not in all_children:
+            all_children.add(child)
+            to_process.extend(term_to_children.get(child, set()))
+
+    return all_children

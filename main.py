@@ -5,7 +5,12 @@ from coherence import (
     check_completeness,
     parse_ec2go,
     map_pathways_to_go_terms,
-    analyze_genome
+    analyze_genome,
+    parse_go_ontology,
+    get_all_child_terms,
+    classify_complexes,
+    count_complexes,
+    MACROMOLECULAR_COMPLEX
 )
 
 def load_annotations(annotation_file):
@@ -25,6 +30,7 @@ if __name__ == "__main__":
     has_part_file = "constraints/has_part_relations.txt"
     ec2go_file = "constraints/ec2go_v2025-03-16"
     pathway_file = "constraints/metacyc_GO_v2025-03-16_with_EC.tsv"
+    ontology_file = "../../data/go-basic.obo"
 
     # Load annotations
     protein_go_terms = load_annotations(annotation_file)
@@ -34,11 +40,11 @@ if __name__ == "__main__":
     core_presence = count_essential_terms(protein_go_terms, core_terms)
     peripheral_presence = count_essential_terms(protein_go_terms, peripheral_terms)
 
-    # Coherence: process
+    # Coherence
     has_part_dict = parse_has_part(has_part_file)
     process_coherence = check_completeness(protein_go_terms, has_part_dict)
 
-    # Coherence: pathways
+    # Pathway completeness
     ec2go_mapping = parse_ec2go(ec2go_file)
     pathway_to_go = map_pathways_to_go_terms(pathway_file, ec2go_mapping)
     completeness_results, completed_pathways, annotated_pathways = analyze_genome(protein_go_terms, pathway_to_go)
@@ -47,8 +53,15 @@ if __name__ == "__main__":
     annotated_pathways_count = len(annotated_pathways)
     proportion_completed = (total_complete_pathways / annotated_pathways_count) * 100 if annotated_pathways_count > 0 else 0
 
+    # Complex coherence
+    term_to_children, _, _ = parse_go_ontology(ontology_file)
+    complex_child_terms = get_all_child_terms(MACROMOLECULAR_COMPLEX, term_to_children)
+    complex_child_terms.add(MACROMOLECULAR_COMPLEX)
 
-    # Output results
+    complex_classifications, _ = classify_complexes(protein_go_terms, complex_child_terms)
+    coherent_count, incoherent_count = count_complexes(complex_classifications)
+
+    # Output
     print("Core GO term presence:")
     for term, present in core_presence.items():
         print(f"{term}\t{present}")
@@ -59,7 +72,11 @@ if __name__ == "__main__":
 
     print(f"\nProcess Coherence: {process_coherence:.2f}%")
 
-    print(f"\nPathway Completeness:")
+    print("\nPathway Coherence:")
     print(f"Total completed pathways: {total_complete_pathways}")
     print(f"Annotated pathways: {annotated_pathways_count}")
     print(f"Proportion completed: {proportion_completed:.2f}%")
+
+    print("\nComplex Coherence:")
+    print(f"Coherent complexes: {coherent_count}")
+    print(f"Incoherent complexes: {incoherent_count}")
