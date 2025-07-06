@@ -1,1 +1,1 @@
-# GenomeAnnotationFramework
+# Genome Annotation Evaluation Framework
