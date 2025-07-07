@@ -1,5 +1,5 @@
 import csv
-from essential_terms import read_essential_terms, count_essential_terms
+from completeness import read_essential_terms, count_essential_terms
 from utils import get_ancestors, get_specific
 from consistency import check_consistency
 from coherence import (
