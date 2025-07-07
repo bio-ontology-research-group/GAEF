@@ -1,6 +1,7 @@
 import csv
 from essential_terms import read_essential_terms, count_essential_terms
 from utils import get_ancestors, get_specific
+from consistency import check_consistency
 from coherence import (
     parse_has_part,
     check_completeness,
@@ -32,6 +33,7 @@ if __name__ == "__main__":
     ec2go_file = "constraints/ec2go_v2025-03-16"
     pathway_file = "constraints/metacyc_GO_v2025-03-16_with_EC.tsv"
     ontology_file = "data/go-basic.obo"
+    taxa_constraints_file = "constraints/taxon_constraints.tsv"
 
     # Load annotations
     protein_go_terms = load_annotations(annotation_file)
@@ -63,6 +65,8 @@ if __name__ == "__main__":
 
     complex_classifications, _ = classify_complexes(protein_go_terms_ancestors, complex_child_terms)
     coherent_count, incoherent_count = count_complexes(complex_classifications)
+
+    check_consistency(protein_go_terms, taxa_constraints_file, output_file="GCF_000005845.2_ASM584v2_consistency.tsv")
 
     # Output
     print("Core GO term presence:")
