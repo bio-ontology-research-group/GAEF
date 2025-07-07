@@ -1,5 +1,6 @@
 import csv
 from essential_terms import read_essential_terms, count_essential_terms
+from utils import get_ancestors, get_specific
 from coherence import (
     parse_has_part,
     check_completeness,
@@ -25,16 +26,18 @@ def load_annotations(annotation_file):
     return protein_go_terms
 
 if __name__ == "__main__":
-    annotation_file = "GCF_000005845.2_ASM584v2_IPscan_GO_ancestors.tsv"
+    annotation_file = "GCF_000007085.1_ASM708v1_IPscan_GO.tsv"
     term_file = "constraints/essential_terms.tsv"
     has_part_file = "constraints/has_part_relations.txt"
     ec2go_file = "constraints/ec2go_v2025-03-16"
     pathway_file = "constraints/metacyc_GO_v2025-03-16_with_EC.tsv"
-    ontology_file = "../../data/go-basic.obo"
+    ontology_file = "data/go-basic.obo"
 
     # Load annotations
     protein_go_terms = load_annotations(annotation_file)
-
+    protein_go_terms_ancestors = get_ancestors(protein_go_terms)
+    protein_go_terms_specific = get_specific(protein_go_terms)
+    
     # Essential terms
     core_terms, peripheral_terms = read_essential_terms(term_file)
     core_presence = count_essential_terms(protein_go_terms, core_terms)
@@ -42,12 +45,12 @@ if __name__ == "__main__":
 
     # Coherence
     has_part_dict = parse_has_part(has_part_file)
-    process_coherence = check_completeness(protein_go_terms, has_part_dict)
+    process_coherence = check_completeness(protein_go_terms_ancestors, has_part_dict)
 
-    # Pathway completeness
+    # Pathway coherence
     ec2go_mapping = parse_ec2go(ec2go_file)
     pathway_to_go = map_pathways_to_go_terms(pathway_file, ec2go_mapping)
-    completeness_results, completed_pathways, annotated_pathways = analyze_genome(protein_go_terms, pathway_to_go)
+    completeness_results, completed_pathways, annotated_pathways = analyze_genome(protein_go_terms_ancestors, pathway_to_go)
 
     total_complete_pathways = sum(completeness_results.values())
     annotated_pathways_count = len(annotated_pathways)
@@ -58,7 +61,7 @@ if __name__ == "__main__":
     complex_child_terms = get_all_child_terms(MACROMOLECULAR_COMPLEX, term_to_children)
     complex_child_terms.add(MACROMOLECULAR_COMPLEX)
 
-    complex_classifications, _ = classify_complexes(protein_go_terms, complex_child_terms)
+    complex_classifications, _ = classify_complexes(protein_go_terms_ancestors, complex_child_terms)
     coherent_count, incoherent_count = count_complexes(complex_classifications)
 
     # Output
