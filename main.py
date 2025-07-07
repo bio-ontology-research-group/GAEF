@@ -1,4 +1,5 @@
 import csv
+from information_content import calculate_ic_depth_breadth
 from completeness import read_essential_terms, count_essential_terms
 from utils import get_ancestors, get_specific
 from consistency import check_consistency
@@ -87,3 +88,6 @@ if __name__ == "__main__":
     print("\nComplex Coherence:")
     print(f"Coherent complexes: {coherent_count}")
     print(f"Incoherent complexes: {incoherent_count}")
+    
+    ic_stats = calculate_ic_depth_breadth("GCF_000007085.1_ASM708v1_IPscan_IC_nn")
+    print(ic_stats)
