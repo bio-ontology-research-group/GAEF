@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Function Evaluation Framework</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="main-container">
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar expanded">
+            <ul class="sidebar-links">
+                <h4>
+                    <span>Metrics</span>
+                    <div class="menu-separator"></div>
+                </h4>
+                <li><a href="#overview" class="sidebar-link active"><span class="icon material-symbols-outlined">dashboard</span><span class="link-text">Overview</span></a></li>
+                <li><a href="#essential" class="sidebar-link"><span class="icon material-symbols-outlined">genetics</span><span class="link-text">Essential Functions</span></a></li>
+                
+                <li class="sidebar-dropdown">
+                    <a href="#pathways" class="sidebar-link dropdown-toggle">
+                        <span class="icon material-symbols-outlined">route</span>
+                        <span class="link-text">Pathways</span>
+                    </a>
+                    <ul class="dropdown-content" style="display: none;">
+                        <li><a href="#pathways-completeness" class="sidebar-link"><span class="icon material-symbols-outlined">arrow_right</span><span>Pathway Completeness</span></a></li>
+                        <li><a href="#pathways-coherence" class="sidebar-link"><span class="icon material-symbols-outlined">arrow_right</span><span>Pathway Coherence</span></a></li>
+                    </ul>
+                </li>
+                
+                <li><a href="#spatial" class="sidebar-link"><span class="icon material-symbols-outlined">my_location</span><span class="link-text">Spatial Consistency</span></a></li>
+            </ul>
+            <button class="sidebar-toggle" aria-label="Toggle Sidebar">&larr;</button>
+        </aside>
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Header -->
+         <div class="header">
+            <div class="header-content">
+                <h1>Function Evaluation Framework</h1>
+                <p><strong>Genome:</strong> {{ assem_name }}</p>
+            </div>
+        </div>
+
+        <!-- Overview Section -->
+        <div id="overview" class="section">
+            <h2>Overview</h2>
+            <div>{{ gauge_html | safe }}</div>
+        </div>
+
+        <!-- Essential Functions Section -->
+        <div id="essential" class="section">
+            <div id="essential-terms" class="section-banner">
+                <h2>Essential Functions</h2>
+            </div>
+            <div class="callout">
+                Certain core functions are essential for cellular viability and must be present in all bacterial organisms. The minimal bacterial genome required for viability (Syn1.0) was used as a basis to determine 'essential' functions. Essential genes were manually mapped to GO terms and classified into general functional categories.
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Score</span>
+                    <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                </div>
+                <div class="divider"></div>
+                <div class="card-body">
+                    <div class="progress-group">
+                        <label>{{ missing_essential_percentage }}%</label>
+                        <div class="progress" data-percentage="{{ missing_essential_percentage | int }}">
+                            <div class="progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Completeness Plot -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Plot</span>
+                    <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                </div>
+                <div class="divider"></div>
+                <div class="card-body">
+                    {{ plot_essential_html | safe }}
+                </div>
+            </div>
+
+            <!-- Essential Functions Table -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Table</span>
+                    <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                </div>
+
+                <div class="divider"></div>
+                <div class="card-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>GO Term Name</th>
+                                <th>GO Term</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category, terms in go_categories.items() %}
+                                {% for term in terms %}
+                                    <tr>
+                                        {% if loop.first %}
+                                            <td rowspan="{{ terms|length }}">{{ category }}</td>
+                                        {% endif %}
+                                        <td>{{ term.GO_term_name }}</td>
+                                        <td>{{ term.GO_term }}</td>
+                                        <td class="{{ 'found' if term.GO_term in found_terms else 'missing' }}">
+                                            {{ 'Found' if term.GO_term in found_terms else 'Missing' }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pathways Section -->
+        <div id="pathways" class="section">
+            <h2>Pathways</h2>
+        <div class="callout">
+            Many biological processes require the coordinated action of multiple
+proteins. Predictions should ensure that all necessary components of
+critical pathways are identified. Pathway and process completeness were evaluated using both MetaCyc pathway information and the 'has_part' relations in the GO.
+        </div>
+            <div id="pathways-completeness">
+                <h3>Pathway Completeness (MetaCyc)</h3>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Score</span>
+                        <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="card-body">
+                        <div class="progress-group">
+                            <label>{{ metacyc_complete_percentage }}%</label>
+                            <div class="progress" data-percentage="{{ metacyc_complete_percentage | int }}">
+                            <div class="progress-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Pie Chart for MetaCyc Pathways -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Plot</span>
+                        <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="card-body">
+                        {{ metacyc_pie_chart_html | safe }}
+                    </div>
+                </div>
+                
+                <!-- MetaCyc Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Table</span>
+                        <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="card-body">
+    
+                        <!-- Search and Filter Options for MetaCyc Table -->
+                        <div class="search-filters">
+                            <input type="text" id="pathway-search-input" placeholder="Search by Pathway, EC number, or GO term..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                            <label for="pathway-status-filter">Filter by Status:</label>
+                            <select id="pathway-status-filter" style="margin-left: 5px;">
+                                <option value="all">All</option>
+                                <option value="complete">Complete</option>
+                                <option value="missing">Missing</option>
+                            </select>
+                        </div>
+    
+                        <!-- Expand/Collapse All Buttons for MetaCyc Table -->
+                        <div style="margin-bottom: 10px;">
+                            <button id="expand-all-metacyc">Expand All</button>
+                            <button id="collapse-all-metacyc">Collapse All</button>
+                        </div>
+    
+                        <!-- Table -->
+                        <table id="metacyc-table">
+                            <thead>
+                                <tr>
+                                    <th>Pathway</th>
+                                    <th>GO Term</th>
+                                    <th>Status</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pathway, details in pathway_details.items() %}
+                                    <tr class="pathway-summary" data-pathway="{{ pathway }}" data-go-term="{{ details.original_go_term }}">
+                                        <td>{{ pathway }}</td>
+                                        <td>{{ details.original_go_term }}</td>
+                                        <td class="{{ 'found' if details.complete else 'missing' }}">
+                                            {{ 'Complete' if details.complete else 'Incomplete' }}
+                                        </td>
+                                        <td><button class="toggle-details">[+]</button></td>
+                                    </tr>
+                                    
+                                    <tr class="pathway-details" style="display: none;">
+                                        <td colspan="4">
+                                            <table class="relation-details">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Missing EC Number</th>
+                                                        <th>Associated GO Term</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% if details.missing_components %}
+                                                        {% for ec_set in details.missing_components %}
+                                                            {% for ec_number in ec_set %}
+                                                                <tr>
+                                                                    <td>{{ ec_number }}</td>
+                                                                    <td>{{ ec2go_mapping.get(ec_number, 'Unknown') }}</td> <!-- Associated GO Term -->
+                                                                </tr>
+                                                            {% endfor %}
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <tr>
+                                                            <td colspan="2">No missing components</td>
+                                                        </tr>
+                                                    {% endif %}
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Pathway Coherence (Gene Ontology 'has_part')-->
+            <div id="pathways-coherence">
+                <h3>Pathway Coherence (Gene Ontology 'has_part')</h3>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Score</span>
+                        <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="card-body">
+                        <div class="progress-group">
+                            <label>{{ complete_has_part_percentage }}%</label>
+                            <div class="progress" data-percentage="{{ complete_has_part_percentage | int }}">
+                            <div class="progress-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Table</span>
+                        <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="card-body">
+                    <!-- Search and Filter Options -->
+                        <div class="search-filters">
+                            <input type="text" id="search-input" placeholder="Search by Protein ID or GO term..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                            <label for="status-filter">Filter by Status:</label>
+                            <select id="status-filter" style="margin-left: 5px;">
+                                <option value="all">All</option>
+                                <option value="present">Present</option>
+                                <option value="missing">Missing</option>
+                            </select>
+                        </div>
+    
+                        <!-- Expand/Collapse All Buttons for Gene Ontology Table -->
+                        <div style="margin-bottom: 10px;">
+                            <button id="expand-all-go">Expand All</button>
+                            <button id="collapse-all-go">Collapse All</button>
+                        </div>
+    
+                        <!-- Gene Ontology 'has_part' Table -->
+                        <table id="protein-table">
+                            <thead>
+                                <tr>
+                                    <th>Protein ID</th>
+                                    <th>Completeness (%)</th>
+                                    <th>Total Relations</th>
+                                    <th>Missing Relations</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for protein, data in has_part_data.items() %}
+                                    <tr class="protein-summary" data-protein="{{ protein }}">
+                                        <td>{{ protein }}</td>
+                                        <td>{{ data.completeness }}%</td>
+                                        <td>{{ data.total_relations }}</td>
+                                        <td>{{ data.missing_relations_count }}</td>
+                                        <td><button class="toggle-details">[+]</button></td>
+                                    </tr>
+                                    <tr class="protein-details" style="display: none;">
+                                        <td colspan="5">
+                                            <table class="relation-details">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Related Term</th>
+                                                        <th>Source Term</th>
+                                                        <th>Status</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for relation_info in data.present_relations %}
+                                                        <tr class="found" data-status="present" data-go-term="{{ relation_info.relation }} {{ relation_info.from_go_term }}">
+                                                            <td>{{ relation_info.relation }}</td>
+                                                            <td>{{ relation_info.from_go_term }}</td>
+                                                            <td>Present</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                    {% for relation_info in data.missing_relations %}
+                                                        <tr class="missing" data-status="missing" data-go-term="{{ relation_info.relation }} {{ relation_info.from_go_term }}">
+                                                            <td>{{ relation_info.relation }}</td>
+                                                            <td>{{ relation_info.from_go_term }}</td>
+                                                            <td>Missing</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spatial Consistency Section -->
+        <div id="spatial" class="section">
+            <h2>Spatial Consistency</h2>
+            <div class="callout">
+                Cellular processes are often compartmentalized within specific organelles or cellular regions. The Gene Ontology (GO) 'occurs_in' relation to specify the cellular component in which a molecular function or biological process takes place, so it's used to evaluate spatial consistency.
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Score</span>
+                    <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                </div>
+                <div class="divider"></div>
+                <div class="card-body">
+                    <div class="progress-group">
+                        <label>{{ complete_occurs_in_percentage }}%</label>
+                        <div class="progress" data-percentage="{{ complete_occurs_in_percentage | int }}">
+                        <div class="progress-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Table</span>
+                    <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                </div>
+                <div class="divider"></div>
+                <div class="card-body">
+                    <!-- Search and Filter Options for Spatial Consistency Table -->
+                    <div class="search-filters">
+                        <input type="text" id="spatial-search-input" placeholder="Search by Protein ID or GO term..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                        
+                        <label for="spatial-status-filter">Filter by Status:</label>
+                        <select id="spatial-status-filter" style="margin-left: 5px;">
+                            <option value="all">All</option>
+                            <option value="present">Present</option>
+                            <option value="missing">Missing</option>
+                        </select>
+                    </div>
+
+                    <!-- Expand/Collapse All Buttons for Spatial Consistency Table -->
+                    <div style="margin-bottom: 10px;">
+                        <button id="expand-all-spatial">Expand All</button>
+                        <button id="collapse-all-spatial">Collapse All</button>
+                    </div>
+
+                    <!-- Spatial Consistency Table -->
+                    <table id="spatial-table">
+                        <thead>
+                            <tr>
+                                <th>Protein ID</th>
+                                <th>Completeness (%)</th>
+                                <th>Total Relations</th>
+                                <th>Missing Relations</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for protein, data in occurs_in_data.items() %}
+                                <tr class="protein-summary" data-protein="{{ protein }}">
+                                    <td>{{ protein }}</td>
+                                    <td>{{ data.completeness }}%</td>
+                                    <td>{{ data.total_relations }}</td>
+                                    <td>{{ data.missing_relations_count }}</td>
+                                    <td><button class="toggle-details">[+]</button></td>
+                                </tr>
+                                <tr class="protein-details" style="display: none;">
+                                    <td colspan="5">
+                                        <table class="relation-details">
+                                            <thead>
+                                                <tr>
+                                                    <th>Related Term</th>
+                                                    <th>Source Term</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for relation_info in data.present_relations %}
+                                                    <tr class="found" data-status="present" data-go-term="{{ relation_info.relation }} {{ relation_info.from_go_term }}">
+                                                        <td>{{ relation_info.relation }}</td>
+                                                        <td>{{ relation_info.from_go_term}}</td>
+                                                        <td>Present</td>
+                                                    </tr>
+                                                {% endfor %}
+
+                                                {% for relation_info in data.missing_relations %}
+                                                    <tr class="missing" data-status="missing" data-go-term="{{ relation_info.relation }} {{ relation_info.from_go_term }}">
+                                                        <td>{{ relation_info.relation }}</td>
+                                                        <td>{{ relation_info.from_go_term }}</td>
+                                                        <td>Missing</td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- JavaScript for Sidebar Navigation and jQuery for Interactivity -->
+        <script>
+
+            // Function to toggle card visibility
+            function toggleCard(button) {
+                const cardBody = button.closest('.card').querySelector('.card-body');
+                const isVisible = cardBody.style.display !== 'none';
+
+                // Toggle display of card body
+                cardBody.style.display = isVisible ? 'none' : 'block';
+                
+                // Update button text to show + or - based on state
+                button.textContent = isVisible ? '+' : '−';
+            }
+
+            document.addEventListener("DOMContentLoaded", function () {
+                const progressElements = document.querySelectorAll(".progress");
+
+                progressElements.forEach(progress => {
+                    const percentage = parseInt(progress.getAttribute("data-percentage"), 10);
+                    const progressBar = progress.querySelector(".progress-bar");
+
+                    if (!isNaN(percentage) && progressBar) {
+                        progressBar.style.width = `${percentage}%`;
+
+                        // Remove any existing classes for conditional color
+                        progressBar.classList.remove("low", "medium", "high");
+
+                        // Apply the appropriate class based on percentage
+                        if (percentage >= 80) {
+                            progressBar.classList.add("high");
+                        } else if (percentage >= 50) {
+                            progressBar.classList.add("medium");
+                        } else {
+                            progressBar.classList.add("low");
+                        }
+                    }
+                });
+            
+                // Sidebar toggle button functionality
+                const sidebar = document.querySelector(".sidebar");
+                const toggleButton = document.querySelector(".sidebar-toggle");
+
+                toggleButton.textContent = sidebar.classList.contains("expanded") ? "←" : "→";
+
+                toggleButton.addEventListener("click", (event) => {
+                    event.stopPropagation(); // Prevents sidebar click from also toggling
+                    sidebar.classList.toggle("expanded");
+                    toggleButton.textContent = sidebar.classList.contains("expanded") ? "←" : "→";
+                });
+
+                // Display the first section on page load
+                document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
+                document.getElementById('overview').style.display = 'block';
+
+                // Add active class to the first link on load (Overview)
+                document.querySelector('.sidebar-link[href="#overview"]').classList.add('active');
+
+                // Handle sidebar link clicks
+                document.querySelectorAll('.sidebar-link').forEach(link => {
+                    link.addEventListener('click', function(event) {
+                        event.preventDefault();
+
+                        // Get the section ID
+                        const sectionId = link.getAttribute('href').substring(1);
+
+                        // If the section ID is for a main section (not a subsection like Pathway Completeness)
+                        if (sectionId === 'overview' || sectionId === 'essential' || sectionId === 'pathways' || sectionId === 'spatial') {
+                            // Hide all sections
+                            document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
+
+                            // Show only the main section
+                            document.getElementById(sectionId).style.display = 'block';
+                        }
+
+                        // Remove active class from all links
+                        document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+
+                        // Add active class to the clicked link
+                        link.classList.add('active');
+                    });
+                });
+
+                    // Sidebar dropdown toggle for Pathways section
+                const dropdownToggle = document.querySelector('.sidebar-dropdown .dropdown-toggle');
+                const dropdownContent = document.querySelector('.sidebar-dropdown .dropdown-content');
+
+                dropdownToggle.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+                });
+
+                    // Smooth scroll to sections within the Pathways page
+                document.querySelectorAll('.sidebar-dropdown .dropdown-content .sidebar-link').forEach(link => {
+                    link.addEventListener('click', function(event) {
+                        event.preventDefault();
+
+                        // Show the main Pathways section if hidden
+                        document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
+                        document.getElementById('pathways').style.display = 'block';
+
+                        // Scroll to the specific subsection
+                        const targetId = link.getAttribute('href').substring(1);
+                        const targetSection = document.getElementById(targetId);
+                        if (targetSection) {
+                            targetSection.scrollIntoView({ behavior: 'smooth' });
+                        }
+
+                        // Update active link
+                        document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active'));
+                        link.classList.add('active');
+                        });
+                    });
+                });
+
+            // jQuery for Toggle, Expand/Collapse, Search, and Filter Functionality
+            $(document).ready(function () {
+                // Toggle details row visibility
+                $('.toggle-details').on('click', function () {
+                    const detailsRow = $(this).closest('tr').next();
+                    detailsRow.toggle();
+                    $(this).text(detailsRow.is(':visible') ? '[-]' : '[+]');
+                });
+
+            // Expand/Collapse All Functionality //
+
+                // Expand/Collapse All Buttons for MetaCyc Table
+                $('#expand-all-metacyc').on('click', function () {
+                    $('#metacyc-table .pathway-details').show();
+                    $('#metacyc-table .toggle-details').text('[-]');
+                });
+                $('#collapse-all-metacyc').on('click', function () {
+                    $('#metacyc-table .pathway-details').hide();
+                    $('#metacyc-table .toggle-details').text('[+]');
+                });
+
+                // Expand/collapse all for Has_Part table
+                $('#expand-all-go').on('click', function() {
+                    $('#protein-table .protein-details').show();
+                    $('#protein-table .toggle-details').text('[-]');
+                });
+                $('#collapse-all-go').on('click', function() {
+                    $('#protein-table .protein-details').hide();
+                    $('#protein-table .toggle-details').text('[+]');
+                });
+
+                 // Expand/collapse all for Spatial Consistency table
+                $('#expand-all-spatial').on('click', function() {
+                    $('#spatial-table .protein-details').show();
+                    $('#spatial-table .toggle-details').text('[-]');
+                });
+                $('#collapse-all-spatial').on('click', function() {
+                    $('#spatial-table .protein-details').hide();
+                    $('#spatial-table .toggle-details').text('[+]');
+                });
+
+            // Search Functionality //
+
+                // Search functionality for MetaCyc Table
+                $('#pathway-search-input').on('keyup', function () {
+                    const searchTerm = $(this).val().toLowerCase();
+                    $('#metacyc-table tbody tr.pathway-summary').each(function () {
+                        var pathwayName = $(this).data('pathway').toLowerCase();
+                        var goTerm = $(this).data('go-term').toLowerCase();
+                        var detailsRow = $(this).next('.pathway-details');
+
+                        var matchPathway = pathwayName.includes(searchTerm) || goTerm.includes(searchTerm);
+                        var matchEcGoTerm = detailsRow.find('tr').filter(function() {
+                            return $(this).text().toLowerCase().includes(searchTerm);
+                        }).length > 0;
+
+                        $(this).toggle(matchPathway || matchEcGoTerm);
+                        detailsRow.toggle(matchPathway || matchEcGoTerm);
+                    });
+                });
+
+                // Search functionality for has_part table
+                $('#search-input').on('keyup', function() {
+                    const searchTerm = $(this).val().toLowerCase();
+
+                    // Filter protein summary and details rows based on search term
+                    $('#protein-table tbody tr.protein-summary').each(function() {
+                        const proteinName = $(this).data('protein').toLowerCase(); // Data attribute for protein ID
+                        const detailsRow = $(this).next('.protein-details');
+
+                        // Check if protein name matches the search term
+                        const matchProtein = proteinName.includes(searchTerm);
+
+                        // Check if any GO term in details rows matches the search term
+                        const matchGoTerm = detailsRow.find('tr').filter(function() {
+                            // Search within 'data-go-term' attribute in details rows
+                            const goTerm = $(this).data('go-term') ? $(this).data('go-term').toLowerCase() : '';
+                            return goTerm.includes(searchTerm);
+                        }).length > 0;
+
+                        // Show or hide rows based on match in protein name or GO term
+                        $(this).toggle(matchProtein || matchGoTerm);
+                        detailsRow.toggle(matchProtein || matchGoTerm);
+                    });
+                });
+
+                // Search functionality for Spatial Consistency table
+                $('#spatial-search-input').on('keyup', function() {
+                    var searchTerm = $(this).val().toLowerCase();
+
+                    // Filter protein summary and details rows based on search term
+                    $('#spatial-table tbody tr.protein-summary').each(function() {
+                        var proteinName = $(this).data('protein').toLowerCase(); // Data attribute for protein ID
+                        var detailsRow = $(this).next('.protein-details');
+
+                        // Check if protein name matches the search term
+                        var matchProtein = proteinName.includes(searchTerm);
+
+                        // Check if any GO term in details rows matches the search term
+                        var matchGoTerm = detailsRow.find('tr').filter(function() {
+                            // Search within 'data-go-term' attribute in details rows
+                            var goTerm = $(this).data('go-term') ? $(this).data('go-term').toLowerCase() : '';
+                            return goTerm.includes(searchTerm);
+                        }).length > 0;
+
+                        // Show or hide rows based on match in protein name or GO term
+                        $(this).toggle(matchProtein || matchGoTerm);
+                        detailsRow.toggle(matchProtein || matchGoTerm);
+                    });
+                });
+            // Filter by Status Functionality //
+
+                // Filter by Status for Metacyc Table
+                $('#pathway-status-filter').on('change', function () {
+                    const selectedStatus = $(this).val();
+                    $('#metacyc-table tbody tr.pathway-summary').each(function () {
+                        var detailsRow = $(this).next('.pathway-details');
+                        var isComplete = $(this).find('td:nth-child(3)').hasClass('found');
+
+                        if (selectedStatus === 'all' ||
+                            (selectedStatus === 'complete' && isComplete) ||
+                            (selectedStatus === 'missing' && !isComplete)) {
+                            $(this).show();
+                            detailsRow.show();
+                        } else {
+                            $(this).hide();
+                            detailsRow.hide();
+                        }
+                    });
+                });
+
+                // Filter by Status for has part Table
+                $('#status-filter').on('change', function() {
+                    const selectedStatus = $(this).val();
+
+                    $('#protein-table tbody tr.protein-summary').each(function() {
+                        const detailsRow = $(this).next('.protein-details');
+
+                        if (selectedStatus === "all") {
+                            $(this).show();
+                            detailsRow.show();
+                        } else {
+                            // Check if any detail row for the protein matches the selected status
+                            const hasMatchingStatus = detailsRow.find('tr').filter(function() {
+                                return $(this).data('status') === selectedStatus;
+                            }).length > 0;
+
+                            // Show the summary row and toggle details based on matching status
+                            $(this).toggle(hasMatchingStatus);
+                            detailsRow.toggle(hasMatchingStatus);
+                        }
+                    });
+                });
+            });
+
+            // Filter by Status for Spatial Consistency Table
+                $('#spatial-status-filter').on('change', function() {
+                    const selectedStatus = $(this).val();
+
+                    $('#spatial-table tbody tr.protein-summary').each(function() {
+                        const detailsRow = $(this).next('.protein-details');
+
+                        if (selectedStatus === "all") {
+                            $(this).show();
+                            detailsRow.show();
+                        } else {
+                            // Check if any detail row for the protein matches the selected status
+                            const hasMatchingStatus = detailsRow.find('tr').filter(function() {
+                                return $(this).data('status') === selectedStatus;
+                            }).length > 0;
+
+                            // Show the summary row and toggle details based on matching status
+                            $(this).toggle(hasMatchingStatus);
+                            detailsRow.toggle(hasMatchingStatus);
+                        }
+                    });
+                });
+        </script>
+</body>
+</html>
+

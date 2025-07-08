@@ -1,0 +1,330 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+/* Base Styling */
+body {
+	font-family: "Poppins", sans-serif;
+	display: flex;
+	margin: auto;
+	padding: 0;
+	min-height: 100vh;
+	background: #ffffff;
+}
+
+/* Header Styling */
+.header {
+	background-color: #f0f0f5;
+	color: #333;
+	padding: 7px 15px;
+	font-size: 18px;
+	font-weight: normal;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+	z-index: 1000;
+	position: fixed;
+	top: 0;
+	left: 115px; /* Aligns with collapsed sidebar */
+	width: calc(100% - 115px);
+	transition: left 0.3s ease, width 0.3s ease;
+}
+
+/* Expanded Sidebar Adjustment */
+.sidebar.expanded ~ .content .header {
+	left: 260px; /* Aligns with expanded sidebar */
+	width: calc(100% - 260px);
+}
+
+
+.header-content {
+	line-height: 1.2;
+}
+
+.header h1 {
+	margin: 0;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.header p {
+	margin: 0;
+	font-size: 14px;
+	color: #555;
+}
+
+h1 { color: #333; }
+h2 { color: #02364f; }
+h3 { color: #364a6b; }
+h4 { color: #8ecae6; }
+
+/* Main Container */
+.main-container {
+	display: flex;
+	width: 100%;
+}
+
+/* Sidebar Styling */
+.sidebar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 85px; /* Collapsed width */
+	display: flex;
+	flex-direction: column;
+	background: #023047;
+	padding: 15px;
+	overflow-x: hidden;
+	transition: width 0.3s ease;
+}
+
+.sidebar.expanded {
+	width: 230px; /* Expanded width */
+}
+
+/* Sidebar Links */
+.sidebar-links {
+	list-style: none;
+	margin-top: 20px;
+	height: 80%;
+	overflow-y: auto;
+	margin-left: -20px;
+}
+
+.sidebar-links li a {
+	display: flex;
+	align-items: center;
+	color: #fff; /* Default link color */
+	font-weight: 500;
+	padding: 10px 15px;
+	text-decoration: none;
+	border-radius: 4px;
+	transition: background 0.2s ease, color 0.3s ease;
+	gap: 10px;
+	font-size: 14px;
+}
+
+/* Icon Styling - Ensure Default Color */
+.sidebar-links li a .icon {
+	font-size: 20px;
+	min-width: 24px;
+	color: #fff !important; /* Ensure the icon is initially white */
+	transition: color 0.3s ease;
+}
+
+/* Collapsed Sidebar Icon Hover Effect */
+.sidebar:not(.expanded) .sidebar-links li a:hover .icon {
+	color: #ddd !important; /* Change icon color on hover in collapsed state */
+}
+
+/* Expanded Sidebar Hover and Active Effects */
+.sidebar.expanded .sidebar-links li a:hover,
+.sidebar.expanded .sidebar-links li a.active {
+	color: #023047 !important; /* Text color on hover or when active */
+	background: #fff !important; /* Background color on hover or when active */
+}
+
+/* Expanded Sidebar Icon Hover and Active Effects */
+.sidebar.expanded .sidebar-links li a:hover .icon,
+.sidebar.expanded .sidebar-links li a.active .icon {
+	color: #023047 !important; /* Icon color on hover or when active */
+}
+
+/* Link Text Visibility */
+.sidebar-links li a .link-text {
+	display: none; /* Hide the text when collapsed */
+	white-space: nowrap;
+}
+
+/* Show Link Text When Sidebar is Expanded */
+.sidebar.expanded li a .link-text {
+	display: inline;
+	opacity: 1;
+	transition: opacity 0.3s ease;
+}
+
+
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+	background: #364a6b;
+	color: #fff;
+	border: none;
+	padding: 8px;
+	cursor: pointer;
+	border-radius: 4px;
+	width: 40px;
+	font-size: 18px;
+	position: absolute;
+	bottom: 60px;
+	left: 50%;
+	transform: translateX(-50%);
+	transition: transform 0.3s ease;
+}
+
+.sidebar.expanded .sidebar-toggle {
+	transform: translateX(-50%);
+	transition: transform 0.3s ease;
+}
+
+/* Separator Line */
+.menu-separator {
+	width: 60%;
+	height: 1px;
+	background-color: #ddd;
+	margin: 10px 0;
+	opacity: 0.6;
+}
+
+/* Content Area Styling */
+.content {
+	margin-top: 40px; /* Account for fixed header height */
+	margin-left: 120px; /* Adjust for collapsed sidebar */
+	padding: 20px;
+	width: calc(100% - 100px);
+	transition: margin-left 0.3s ease, width 0.3s ease;
+}
+
+.sidebar.expanded + .content {
+	margin-left: 260px; /* Adjust for expanded width */
+	width: calc(100% - 260px);
+}
+
+
+/* Table Styling */
+.section {
+	border-bottom: 1px solid #ddd;
+	padding: 20px 0;
+}
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 10px;
+}
+th, td {
+	padding: 8px 12px;
+	text-align: left;
+	border: 1px solid #ddd;
+}
+th {
+	background-color: #f4f4f4;
+}
+
+/* Status Colors */
+.found { background-color: #d4edda; color: #3d9970; font-weight: bold; }
+.missing { background-color: #f8d7da; color: #dc3545; font-weight: bold; }
+
+/* Search and Filter Styling */
+.search-filters {
+	margin-bottom: 15px;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Callout */
+.callout {
+	border-radius: 4px; /* Rounded corners */
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Light shadow */
+	border-left: 5px solid #dcdcdc; /* Light gray left border */
+	background-color: #f9f9f9; /* Very light gray background */
+	margin-bottom: 20px; /* Space below callout */
+	padding: 15px; /* Inner padding */
+	color: #333; /* Text color */
+}
+
+/* Progress Bar Styling */
+.progress {
+	background-color: #e9ecef;
+	border-radius: 5px; /* Adjust for your preference */
+	height: 20px;
+	overflow: hidden;
+	position: relative;
+	width: 100%;
+	box-shadow: none;
+}
+
+/* Progress Bar - Inner Bar */
+.progress-bar {
+	height: 100%;
+	position: relative;
+	transition: width 0.6s ease;
+}
+
+/* Small Size Variation */
+.progress-sm {
+	height: 10px;
+}
+
+.progress-xs {
+	height: 7px;
+}
+
+.progress-xxs {
+	height: 3px;
+}
+
+.progress-bar.low { background-color: #dc3545; }
+.progress-bar.medium { background-color: #fb8500; }
+.progress-bar.high { background-color: #3d9970; }
+
+/* For Use in Tables - Remove Margins */
+.table tr > td .progress {
+	margin: 0;
+}
+
+/* Progress Group */
+.progress-group {
+	margin-bottom: 1rem;
+}
+
+/* Card Container */
+.card {
+	background-color: #ffffff;
+	border-radius: 5px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+	padding: 15px;
+	margin-bottom: 20px;
+}
+
+/* Card Body */
+.card-body {
+	padding: 15px;
+}
+
+/* Minimize Button */
+.btn-tool {
+	background-color: transparent;
+	border: none;
+	color: #333;
+	font-size: 18px;
+	cursor: pointer;
+	outline: none;
+	padding: 0;
+}
+
+/* Card Header */
+.card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 5px 10px;
+	font-size: 16px;
+	font-weight: bold;
+	position: relative;
+}
+
+/* Divider Line */
+.divider {
+	height: 1px;
+	background-color: #ddd;
+	margin: 0 15px;
+}
+
+/* Style for dropdown content */
+.sidebar-dropdown .dropdown-content {
+	padding-left: 20px; /* Indentation for nested items */
+	list-style-type: none;
+}
+
+.sidebar-dropdown .dropdown-content li {
+	padding: 5px 0;
+}
