@@ -6,6 +6,7 @@ from information_content import calculate_ic_depth_breadth
 from completeness import read_essential_terms, count_essential_terms
 from utils import get_ancestors, get_specific, Ontology
 from consistency import check_consistency
+import plots
 from coherence import (
     parse_has_part,
     check_has_part,
@@ -31,6 +32,7 @@ def load_annotations(annotation_file):
                 protein_go_terms[protein_id] = go_terms
     return protein_go_terms
 
+assem_name = "GCF_000007085.1_ASM708v1"
 annotation_file = "GCF_000007085.1_ASM708v1_IPscan_GO.tsv"
 term_file = "constraints/essential_terms.tsv"
 has_part_file = "constraints/has_part_relations.txt"
@@ -41,7 +43,7 @@ taxa_constraints_file = "constraints/taxon_constraints.tsv"
 MACROMOLECULAR_COMPLEX = "GO:0032991"
 HOMODIMERIZATION = "GO:0042803"
 
-@app.route('/')
+# @app.route('/')
 def evaluation():
 	# Load annotations
 	protein_go_terms = load_annotations(annotation_file)
@@ -108,8 +110,18 @@ def evaluation():
 	# Taxonomic consistency
 	check_consistency(protein_go_terms, taxa_constraints_file, output_file="GCF_000005845.2_ASM584v2_consistency.tsv")
 
+	### OVERVIEW ###
+	completeness_data = [
+		essential_percentage,
+		metacyc_pct,
+		process_coherence, 
+		complex_coherence
+]
+	gauge_html = plots.create_completeness_gauge_html(completeness_data)
+
 	return render_template(
         'html_output_template.html',
+        assem_name=assem_name,
         essential_percentage=round(essential_percentage, 2),
         plot_core_html=plot_core_html,
         plot_periph_html=plot_periph_html,
@@ -127,8 +139,13 @@ def evaluation():
         metacyc_completed=total_completed,
         metacyc_annotated=total_annotated,
         metacyc_incomplete=total_incomplete,
-        pathway_details=pathway_details
+        pathway_details=pathway_details,
+        gauge_html=gauge_html
     )
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    with app.app_context():
+        html = evaluation()
+        with open('output_report.html', 'w', encoding='utf-8') as f:
+            f.write(html)
+        print("Saved to output_report.html")

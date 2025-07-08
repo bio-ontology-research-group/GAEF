@@ -79,7 +79,7 @@ inputFile.eachLine { line ->
     }
     def parts = line.split("\t", -1)
     if (parts.length < 5) return
-    def genomeName = parts[0].trim().replaceAll("_IPscan_GO_ancestors.tsv", "")
+    def genomeName = parts[0].trim().replaceAll(".tsv", "")
     def annotation = new GenomeAnnotation(
         genomeName: genomeName,
         proteinName: parts[1].trim(),
