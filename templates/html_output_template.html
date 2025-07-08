@@ -24,17 +24,15 @@
                 <li><a href="#completeness" class="sidebar-link"><span class="icon material-symbols-outlined">genetics</span><span class="link-text">Completeness</span></a></li>
                 
                 <li class="sidebar-dropdown">
-                    <a href="#pathways" class="sidebar-link dropdown-toggle">
-                        <span class="icon material-symbols-outlined">route</span>
-                        <span class="link-text">Pathways</span>
-                    </a>
+                    <a href="#coherence" class="sidebar-link dropdown-toggle"><span class="icon material-symbols-outlined">route</span><span class="link-text">Coherence</span></a>
                     <ul class="dropdown-content" style="display: none;">
-                        <li><a href="#pathways-completeness" class="sidebar-link"><span class="icon material-symbols-outlined">arrow_right</span><span>Pathway Completeness</span></a></li>
-                        <li><a href="#pathways-coherence" class="sidebar-link"><span class="icon material-symbols-outlined">arrow_right</span><span>Pathway Coherence</span></a></li>
+                        <li><a href="#pathway -coherence" class="sidebar-link"><span class="icon material-symbols-outlined">arrow_right</span><span>Pathway Coherence</span></a></li>
+                        <li><a href="#process-coherence" class="sidebar-link"><span class="icon material-symbols-outlined">arrow_right</span><span>Process Coherence</span></a></li>
+								<li><a href="#complex-coherence" class="sidebar-link"><span class="icon material-symbols-outlined">arrow_right</span><span>Protein Complex Coherence</span></a></li>
                     </ul>
                 </li>
                 
-                <li><a href="#spatial" class="sidebar-link"><span class="icon material-symbols-outlined">my_location</span><span class="link-text">Spatial Consistency</span></a></li>
+                <li><a href="#consistency" class="sidebar-link"><span class="icon material-symbols-outlined">my_location</span><span class="link-text">Consistency</span></a></li>
             </ul>
             <button class="sidebar-toggle" aria-label="Toggle Sidebar">&larr;</button>
         </aside>
@@ -54,7 +52,7 @@
             <div>{{ gauge_html | safe }}</div>
         </div>
 
-        <!-- Essential Functions Section -->
+        <!-- Completeness Section -->
         <div id="completeness" class="section">
             <div id="essential-terms" class="section-banner">
                 <h2>Essential Functions</h2>
@@ -70,27 +68,39 @@
                 <div class="divider"></div>
                 <div class="card-body">
                     <div class="progress-group">
-                        <label>{{ missing_essential_percentage }}%</label>
-                        <div class="progress" data-percentage="{{ missing_essential_percentage | int }}">
+                        <label>{{ essential_percentage }}%</label>
+                        <div class="progress" data-percentage="{{ essential_percentage | int }}">
                             <div class="progress-bar"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Category Completeness Plot -->
+            <!-- Core Plot -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Plot</span>
+                    <span class="card-title">Core Functions</span>
                     <button class="btn-tool" onclick="toggleCard(this)">-</button>
                 </div>
                 <div class="divider"></div>
                 <div class="card-body">
-                    {{ plot_essential_html | safe }}
+                    {{ plot_core_html | safe }}
                 </div>
             </div>
 
-            <!-- Essential Functions Table -->
+				<!-- Peripheral Plot -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Peripheral Functions</span>
+                    <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                </div>
+                <div class="divider"></div>
+                <div class="card-body">
+                    {{ plot_periph_html | safe }}
+                </div>
+            </div>
+
+            <!-- Core Functions Table -->
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">Table</span>
@@ -102,26 +112,20 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Category</th>
-                                <th>GO Term Name</th>
+                                <th>Function</th>
                                 <th>GO Term</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for category, terms in go_categories.items() %}
-                                {% for term in terms %}
-                                    <tr>
-                                        {% if loop.first %}
-                                            <td rowspan="{{ terms|length }}">{{ category }}</td>
-                                        {% endif %}
-                                        <td>{{ term.GO_term_name }}</td>
-                                        <td>{{ term.GO_term }}</td>
-                                        <td class="{{ 'found' if term.GO_term in found_terms else 'missing' }}">
-                                            {{ 'Found' if term.GO_term in found_terms else 'Missing' }}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
+                            {% for term in go_categories_core.Core %}
+                            <tr>
+										  <td>{{ term.Function }}</td>
+										  <td>{{ term.term }}</td>
+										  <td class="{{ 'found' if term.term in found_terms else 'missing' }}">
+												{{ 'Found' if term.term in found_terms else 'Missing' }}
+										  </td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -129,19 +133,44 @@
             </div>
         </div>
 
-        <!-- Pathways Section -->
-        <div id="pathways" class="section">
-            <h2>Pathways</h2>
-        <div class="callout">
-            Many biological processes require the coordinated action of multiple
-proteins. Predictions should ensure that all necessary components of
-critical pathways are identified. Pathway and process completeness were evaluated using both MetaCyc pathway information and the 'has_part' relations in the GO.
+        <!-- Consistency Section -->
+        <div id="consistency" class="section">
+				<h2>Taxonomic Consistency</h2>
+				<div class="callout">
+					To evaluate taxonomic consistency, we use the 'in taxon' constraints encoded in GO. These constraints specify which taxa can ('only in taxon', RO:0002160) or cannot ('never in taxon', RO:0002161) perform certain functions.
+
+				</div>
+				<div class="card">
+					<div class="card-header">
+						<span class="card-title">Satisfiability</span>
+						<button class="btn-tool" onclick="toggleCard(this)">-</button>
+					</div>
+					<div class="divider"></div>
+					<div class="card-body">
+						<div class="status-group">
+							{% if satisfiable %}
+								<span class="material-symbols-outlined status-icon found">check_circle</span>
+								<span class="status-text found">Satisfiable</span>
+							{% else %}
+								<span class="material-symbols-outlined status-icon missing">cancel</span>
+								<span class="status-text missing">Unsatisfiable</span>
+							{% endif %}
+						</div>
+					</div>
+				</div>
         </div>
-            <div id="pathways-completeness">
-                <h3>Pathway Completeness (MetaCyc)</h3>
+
+        <!-- Coherence Section -->
+        <div id="coherence" class="section">
+            <h2>Coherence</h2>
+        <div class="callout">
+            Many biological processes require the coordinated action of multiple proteins. Predictions should ensure that all necessary components of critical pathways are identified. Pathway, process, and preotein complex coherence were evaluated using MetaCyc pathway information and the 'has_part' relations and protein complex information in the GO.
+        </div>
+            <div id="pathway-coherence">
+                <h3>Pathway Coherence (MetaCyc)</h3>
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">Score</span>
+                        <span class="card-title">Pathway Coherence Score</span>
                         <button class="btn-tool" onclick="toggleCard(this)">-</button>
                     </div>
                     <div class="divider"></div>
@@ -155,22 +184,22 @@ critical pathways are identified. Pathway and process completeness were evaluate
                     </div>
                 </div>
     
-                <!-- Pie Chart for MetaCyc Pathways -->
+                <!-- Pie Chart for MetaCyc Pathways
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">Plot</span>
+                        <span class="card-title">Pathway Coherence Plot</span>
                         <button class="btn-tool" onclick="toggleCard(this)">-</button>
                     </div>
                     <div class="divider"></div>
                     <div class="card-body">
                         {{ metacyc_pie_chart_html | safe }}
                     </div>
-                </div>
+                </div> -->
                 
                 <!-- MetaCyc Table -->
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">Table</span>
+                        <span class="card-title">Pathway Coherence Table</span>
                         <button class="btn-tool" onclick="toggleCard(this)">-</button>
                     </div>
                     <div class="divider"></div>
@@ -229,7 +258,7 @@ critical pathways are identified. Pathway and process completeness were evaluate
                                                             {% for ec_number in ec_set %}
                                                                 <tr>
                                                                     <td>{{ ec_number }}</td>
-                                                                    <td>{{ ec2go_mapping.get(ec_number, 'Unknown') }}</td> <!-- Associated GO Term -->
+                                                                    <td>{{ ec2go_mapping.get(ec_number, ['Unknown']) | join(', ') }}</td> <!-- Associated GO Term -->
                                                                 </tr>
                                                             {% endfor %}
                                                         {% endfor %}
@@ -249,13 +278,12 @@ critical pathways are identified. Pathway and process completeness were evaluate
                 </div>
             </div>
 
-
-            <!-- Pathway Coherence (Gene Ontology 'has_part')-->
-            <div id="pathways-coherence">
-                <h3>Pathway Coherence (Gene Ontology 'has_part')</h3>
+            <!-- Process Coherence (Gene Ontology 'has_part')-->
+            <div id="process-coherence">
+                <h3>Process Coherence (Gene Ontology 'has_part')</h3>
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">Score</span>
+                        <span class="card-title">Process Coherence Score</span>
                         <button class="btn-tool" onclick="toggleCard(this)">-</button>
                     </div>
                     <div class="divider"></div>
@@ -271,76 +299,37 @@ critical pathways are identified. Pathway and process completeness were evaluate
     
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-title">Table</span>
+                        <span class="card-title">Process Coherence Table</span>
                         <button class="btn-tool" onclick="toggleCard(this)">-</button>
                     </div>
                     <div class="divider"></div>
                     <div class="card-body">
                     <!-- Search and Filter Options -->
                         <div class="search-filters">
-                            <input type="text" id="search-input" placeholder="Search by Protein ID or GO term..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                            <label for="status-filter">Filter by Status:</label>
-                            <select id="status-filter" style="margin-left: 5px;">
-                                <option value="all">All</option>
-                                <option value="present">Present</option>
-                                <option value="missing">Missing</option>
-                            </select>
+                            <input type="text" id="haspart-search-input" placeholder="Search by Protein ID or GO term..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
                         </div>
-    
-                        <!-- Expand/Collapse All Buttons for Gene Ontology Table -->
-                        <div style="margin-bottom: 10px;">
-                            <button id="expand-all-go">Expand All</button>
-                            <button id="collapse-all-go">Collapse All</button>
-                        </div>
-    
+   
                         <!-- Gene Ontology 'has_part' Table -->
                         <table id="protein-table">
                             <thead>
                                 <tr>
                                     <th>Protein ID</th>
-                                    <th>Completeness (%)</th>
-                                    <th>Total Relations</th>
-                                    <th>Missing Relations</th>
-                                    <th>Details</th>
+                                    <th>Annotated Terms</th>
+                                    <th>Missing Related Terms</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for protein, data in has_part_data.items() %}
-                                    <tr class="protein-summary" data-protein="{{ protein }}">
-                                        <td>{{ protein }}</td>
-                                        <td>{{ data.completeness }}%</td>
-                                        <td>{{ data.total_relations }}</td>
-                                        <td>{{ data.missing_relations_count }}</td>
-                                        <td><button class="toggle-details">[+]</button></td>
-                                    </tr>
-                                    <tr class="protein-details" style="display: none;">
-                                        <td colspan="5">
-                                            <table class="relation-details">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Related Term</th>
-                                                        <th>Source Term</th>
-                                                        <th>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for relation_info in data.present_relations %}
-                                                        <tr class="found" data-status="present" data-go-term="{{ relation_info.relation }} {{ relation_info.from_go_term }}">
-                                                            <td>{{ relation_info.relation }}</td>
-                                                            <td>{{ relation_info.from_go_term }}</td>
-                                                            <td>Present</td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                    {% for relation_info in data.missing_relations %}
-                                                        <tr class="missing" data-status="missing" data-go-term="{{ relation_info.relation }} {{ relation_info.from_go_term }}">
-                                                            <td>{{ relation_info.relation }}</td>
-                                                            <td>{{ relation_info.from_go_term }}</td>
-                                                            <td>Missing</td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </td>
+                                {% for entry in has_part_data %}
+                                    <tr class="protein-summary" data-protein="{{ entry.protein_id }}">
+                                        <td>{{ entry.protein_id }}</td>
+                                        <td>{{ entry['annotated_term'] }}</td>
+                                        <td>
+														{% if entry.missing_parts %}
+															{{entry.missing_parts | join(', ') }}
+														{% else %}
+															None
+														{% endif %}
+													 </td>
                                     </tr>
                                 {% endfor %}
                             </tbody>
@@ -348,112 +337,60 @@ critical pathways are identified. Pathway and process completeness were evaluate
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Spatial Consistency Section -->
-        <div id="spatial" class="section">
-            <h2>Spatial Consistency</h2>
-            <div class="callout">
-                Cellular processes are often compartmentalized within specific organelles or cellular regions. The Gene Ontology (GO) 'occurs_in' relation to specify the cellular component in which a molecular function or biological process takes place, so it's used to evaluate spatial consistency.
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <span class="card-title">Score</span>
-                    <button class="btn-tool" onclick="toggleCard(this)">-</button>
-                </div>
-                <div class="divider"></div>
-                <div class="card-body">
-                    <div class="progress-group">
-                        <label>{{ complete_occurs_in_percentage }}%</label>
-                        <div class="progress" data-percentage="{{ complete_occurs_in_percentage | int }}">
-                        <div class="progress-bar"></div>
+            <!-- Protein Complex Coherence -->
+            <div id="complex-coherence">
+                <h3>Protein Complex Coherence</h3>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Protein Complex Coherence Score</span>
+                        <button class="btn-tool" onclick="toggleCard(this)">-</button>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="card-body">
+                        <div class="progress-group">
+                            <label>{{ complex_coherence }}%</label>
+                            <div class="progress" data-percentage="{{ complex_coherence | int }}">
+                            <div class="progress-bar"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
+    
+				<!-- Protein Complex Coherence Table -->
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Table</span>
+                    <span class="card-title">Protein Complex Coherence Table</span>
                     <button class="btn-tool" onclick="toggleCard(this)">-</button>
                 </div>
+
                 <div class="divider"></div>
                 <div class="card-body">
-                    <!-- Search and Filter Options for Spatial Consistency Table -->
-                    <div class="search-filters">
-                        <input type="text" id="spatial-search-input" placeholder="Search by Protein ID or GO term..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                        
-                        <label for="spatial-status-filter">Filter by Status:</label>
-                        <select id="spatial-status-filter" style="margin-left: 5px;">
-                            <option value="all">All</option>
-                            <option value="present">Present</option>
-                            <option value="missing">Missing</option>
-                        </select>
-                    </div>
-
-                    <!-- Expand/Collapse All Buttons for Spatial Consistency Table -->
-                    <div style="margin-bottom: 10px;">
-                        <button id="expand-all-spatial">Expand All</button>
-                        <button id="collapse-all-spatial">Collapse All</button>
-                    </div>
-
-                    <!-- Spatial Consistency Table -->
-                    <table id="spatial-table">
+                    <table>
                         <thead>
                             <tr>
-                                <th>Protein ID</th>
-                                <th>Completeness (%)</th>
-                                <th>Total Relations</th>
-                                <th>Missing Relations</th>
-                                <th>Details</th>
+                                <th>Complex GO Class</th>
+                                <th>GO Class Name</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for protein, data in occurs_in_data.items() %}
-                                <tr class="protein-summary" data-protein="{{ protein }}">
-                                    <td>{{ protein }}</td>
-                                    <td>{{ data.completeness }}%</td>
-                                    <td>{{ data.total_relations }}</td>
-                                    <td>{{ data.missing_relations_count }}</td>
-                                    <td><button class="toggle-details">[+]</button></td>
-                                </tr>
-                                <tr class="protein-details" style="display: none;">
-                                    <td colspan="5">
-                                        <table class="relation-details">
-                                            <thead>
-                                                <tr>
-                                                    <th>Related Term</th>
-                                                    <th>Source Term</th>
-                                                    <th>Status</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for relation_info in data.present_relations %}
-                                                    <tr class="found" data-status="present" data-go-term="{{ relation_info.relation }} {{ relation_info.from_go_term }}">
-                                                        <td>{{ relation_info.relation }}</td>
-                                                        <td>{{ relation_info.from_go_term}}</td>
-                                                        <td>Present</td>
-                                                    </tr>
-                                                {% endfor %}
-
-                                                {% for relation_info in data.missing_relations %}
-                                                    <tr class="missing" data-status="missing" data-go-term="{{ relation_info.relation }} {{ relation_info.from_go_term }}">
-                                                        <td>{{ relation_info.relation }}</td>
-                                                        <td>{{ relation_info.from_go_term }}</td>
-                                                        <td>Missing</td>
-                                                    </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
+								<tbody>
+								{% for go_term, status in complex_classifications.items() %}
+								<tr class="complex-summary" data-term="{{ go_term }}">
+									<td>{{ go_term }}</td>
+									<td>{{ term_names[go_term] }}</td>
+									<td class="{{ 'found' if status=='coherent' else 'missing' }}">
+										{{ status|capitalize}}
+									</td>
+								</tr>
+								{% endfor %}
+								</tbody>
                     </table>
                 </div>
             </div>
         </div>
+
+
 
         <!-- JavaScript for Sidebar Navigation and jQuery for Interactivity -->
         <script>
@@ -522,7 +459,7 @@ critical pathways are identified. Pathway and process completeness were evaluate
                         const sectionId = link.getAttribute('href').substring(1);
 
                         // If the section ID is for a main section (not a subsection like Pathway Completeness)
-                        if (sectionId === 'overview' || sectionId === 'essential' || sectionId === 'pathways' || sectionId === 'spatial') {
+                        if (sectionId === 'overview' || sectionId === 'completeness' || sectionId === 'coherence' || sectionId === 'consistency') {
                             // Hide all sections
                             document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
 
@@ -554,7 +491,7 @@ critical pathways are identified. Pathway and process completeness were evaluate
 
                         // Show the main Pathways section if hidden
                         document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
-                        document.getElementById('pathways').style.display = 'block';
+                        document.getElementById('coherence').style.display = 'block';
 
                         // Scroll to the specific subsection
                         const targetId = link.getAttribute('href').substring(1);
@@ -601,15 +538,15 @@ critical pathways are identified. Pathway and process completeness were evaluate
                     $('#protein-table .toggle-details').text('[+]');
                 });
 
-                 // Expand/collapse all for Spatial Consistency table
-                $('#expand-all-spatial').on('click', function() {
-                    $('#spatial-table .protein-details').show();
-                    $('#spatial-table .toggle-details').text('[-]');
-                });
-                $('#collapse-all-spatial').on('click', function() {
-                    $('#spatial-table .protein-details').hide();
-                    $('#spatial-table .toggle-details').text('[+]');
-                });
+               //   // Expand/collapse all for Spatial Consistency table
+               //  $('#expand-all-spatial').on('click', function() {
+               //      $('#spatial-table .protein-details').show();
+               //      $('#spatial-table .toggle-details').text('[-]');
+               //  });
+               //  $('#collapse-all-spatial').on('click', function() {
+               //      $('#spatial-table .protein-details').hide();
+               //      $('#spatial-table .toggle-details').text('[+]');
+               //  });
 
             // Search Functionality //
 
@@ -632,54 +569,17 @@ critical pathways are identified. Pathway and process completeness were evaluate
                 });
 
                 // Search functionality for has_part table
-                $('#search-input').on('keyup', function() {
-                    const searchTerm = $(this).val().toLowerCase();
+                $('#haspart-search-input').on('keyup', function() {
+                    const term = $(this).val().toLowerCase();
 
                     // Filter protein summary and details rows based on search term
                     $('#protein-table tbody tr.protein-summary').each(function() {
-                        const proteinName = $(this).data('protein').toLowerCase(); // Data attribute for protein ID
-                        const detailsRow = $(this).next('.protein-details');
-
-                        // Check if protein name matches the search term
-                        const matchProtein = proteinName.includes(searchTerm);
-
-                        // Check if any GO term in details rows matches the search term
-                        const matchGoTerm = detailsRow.find('tr').filter(function() {
-                            // Search within 'data-go-term' attribute in details rows
-                            const goTerm = $(this).data('go-term') ? $(this).data('go-term').toLowerCase() : '';
-                            return goTerm.includes(searchTerm);
-                        }).length > 0;
-
-                        // Show or hide rows based on match in protein name or GO term
-                        $(this).toggle(matchProtein || matchGoTerm);
-                        detailsRow.toggle(matchProtein || matchGoTerm);
+                        const cols = $(this).find('td').map((i,td)=> td.textContent.toLowerCase()).get(); // Data attribute for protein ID
+                        const keep = cols.some(txt=> txt.includes(term));
+								$(this).toggle(keep);
                     });
                 });
 
-                // Search functionality for Spatial Consistency table
-                $('#spatial-search-input').on('keyup', function() {
-                    var searchTerm = $(this).val().toLowerCase();
-
-                    // Filter protein summary and details rows based on search term
-                    $('#spatial-table tbody tr.protein-summary').each(function() {
-                        var proteinName = $(this).data('protein').toLowerCase(); // Data attribute for protein ID
-                        var detailsRow = $(this).next('.protein-details');
-
-                        // Check if protein name matches the search term
-                        var matchProtein = proteinName.includes(searchTerm);
-
-                        // Check if any GO term in details rows matches the search term
-                        var matchGoTerm = detailsRow.find('tr').filter(function() {
-                            // Search within 'data-go-term' attribute in details rows
-                            var goTerm = $(this).data('go-term') ? $(this).data('go-term').toLowerCase() : '';
-                            return goTerm.includes(searchTerm);
-                        }).length > 0;
-
-                        // Show or hide rows based on match in protein name or GO term
-                        $(this).toggle(matchProtein || matchGoTerm);
-                        detailsRow.toggle(matchProtein || matchGoTerm);
-                    });
-                });
             // Filter by Status Functionality //
 
                 // Filter by Status for Metacyc Table
@@ -724,29 +624,6 @@ critical pathways are identified. Pathway and process completeness were evaluate
                     });
                 });
             });
-
-            // Filter by Status for Spatial Consistency Table
-                $('#spatial-status-filter').on('change', function() {
-                    const selectedStatus = $(this).val();
-
-                    $('#spatial-table tbody tr.protein-summary').each(function() {
-                        const detailsRow = $(this).next('.protein-details');
-
-                        if (selectedStatus === "all") {
-                            $(this).show();
-                            detailsRow.show();
-                        } else {
-                            // Check if any detail row for the protein matches the selected status
-                            const hasMatchingStatus = detailsRow.find('tr').filter(function() {
-                                return $(this).data('status') === selectedStatus;
-                            }).length > 0;
-
-                            // Show the summary row and toggle details based on matching status
-                            $(this).toggle(hasMatchingStatus);
-                            detailsRow.toggle(hasMatchingStatus);
-                        }
-                    });
-                });
         </script>
 </body>
 </html>

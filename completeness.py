@@ -2,21 +2,21 @@ import sys
 
 # Read essential terms from file
 def read_essential_terms(term_file):
-    core_terms = set()
-    peripheral_terms = set()
-    
+    core_entries = []
+    periph_entries = []
     with open(term_file, 'r') as f:
-        next(f)  # Skip header
+        next(f)  # skip header
         for line in f:
             parts = line.strip().split('\t')
-            if len(parts) >= 3:
-                go_term, category, _ = parts
-                if category == 'Core':
-                    core_terms.add(go_term)
-                else:
-                    peripheral_terms.add(go_term)
-    
-    return core_terms, peripheral_terms
+            if len(parts) < 3:
+                continue
+            go_term, category, function = parts
+            entry = {'term': go_term, 'category': category, 'Function': function}
+            if category == 'Core':
+                core_entries.append(entry)
+            else:
+                periph_entries.append(entry)
+    return core_entries, periph_entries
 
 # Count presence/absence of GO terms
 def count_essential_terms(protein_go_terms, target_go_terms):

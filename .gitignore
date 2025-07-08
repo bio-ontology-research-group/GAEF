@@ -2,6 +2,3 @@ __pycache__/
 data/
 GCF*
 plots.py
-render_output.py
-templates/
-static/
