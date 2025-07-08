@@ -1,11 +1,11 @@
 import csv
 from information_content import calculate_ic_depth_breadth
 from completeness import read_essential_terms, count_essential_terms
-from utils import get_ancestors, get_specific
+from utils import get_ancestors, get_specific, Ontology
 from consistency import check_consistency
 from coherence import (
     parse_has_part,
-    check_completeness,
+    check_has_part,
     parse_ec2go,
     map_pathways_to_go_terms,
     analyze_genome,
@@ -48,12 +48,12 @@ if __name__ == "__main__":
 
     # Coherence
     has_part_dict = parse_has_part(has_part_file)
-    process_coherence = check_completeness(protein_go_terms_ancestors, has_part_dict)
+    process_coherence, has_part_protein_details = check_has_part(protein_go_terms_ancestors, has_part_dict)
 
     # Pathway coherence
     ec2go_mapping = parse_ec2go(ec2go_file)
     pathway_to_go = map_pathways_to_go_terms(pathway_file, ec2go_mapping)
-    completeness_results, completed_pathways, annotated_pathways = analyze_genome(protein_go_terms_ancestors, pathway_to_go)
+    completeness_results, completed_pathways, annotated_pathways, pathway_details = analyze_genome(protein_go_terms_ancestors, pathway_to_go, ec2go_mapping)
 
     total_complete_pathways = sum(completeness_results.values())
     annotated_pathways_count = len(annotated_pathways)
@@ -63,9 +63,9 @@ if __name__ == "__main__":
     term_to_children, _, _ = parse_go_ontology(ontology_file)
     complex_child_terms = get_all_child_terms(MACROMOLECULAR_COMPLEX, term_to_children)
     complex_child_terms.add(MACROMOLECULAR_COMPLEX)
-
     complex_classifications, _ = classify_complexes(protein_go_terms_ancestors, complex_child_terms)
     coherent_count, incoherent_count = count_complexes(complex_classifications)
+    complex_coherence = (coherent_count / (coherent_count + incoherent_count)) * 100 if (coherent_count + incoherent_count) > 0 else 0
 
     check_consistency(protein_go_terms, taxa_constraints_file, output_file="GCF_000005845.2_ASM584v2_consistency.tsv")
 
@@ -91,3 +91,7 @@ if __name__ == "__main__":
     
     ic_stats = calculate_ic_depth_breadth("GCF_000007085.1_ASM708v1_IPscan_IC_nn")
     print(ic_stats)
+    
+    go = Ontology(ontology_file)
+    term_names = {t: go.get_term(t)['name'] for t in complex_classifications}
+

@@ -26,7 +26,7 @@ def parse_has_part(file_path):
     return has_part_dict
 
 
-def check_completeness(protein_go_terms, has_part_dict):
+def check_has_part(protein_go_terms, has_part_dict):
     """
     Check if the required 'has-part' GO terms are included in the genome's GO terms.
     Returns the percentage of missing 'has-part' relations at the genome level.
@@ -37,18 +37,25 @@ def check_completeness(protein_go_terms, has_part_dict):
 
     missing_relations_count = 0
     total_relations_count = 0
-
-    for go_term in genome_go_terms:
-        if go_term in has_part_dict:
-            required_parts = has_part_dict[go_term]
-            missing = required_parts - genome_go_terms
-            missing_relations_count += len(missing)
-            total_relations_count += len(required_parts)
+    protein_details = []
+    for protein_id, go_terms in protein_go_terms.items():
+        for go_term in genome_go_terms:
+            if go_term in has_part_dict:
+                required_parts = has_part_dict[go_term]
+                missing = sorted(required_parts - genome_go_terms)
+                missing_relations_count += len(missing)
+                total_relations_count += len(required_parts)
+                protein_details.append({
+						  "protein_id": protein_id,
+						  "annotated_term": go_term,
+						  "missing_parts": missing
+					 })
 
     if total_relations_count == 0:
         return 0
     missing_percentage = (missing_relations_count / total_relations_count) * 100
-    return (100 - missing_percentage)
+    process_coherence = (100 - missing_percentage)
+    return process_coherence, protein_details
 
 #### PATHWAY COHERENCE ####
 def parse_ec2go(filename):
@@ -89,30 +96,58 @@ def map_pathways_to_go_terms(pathway_file, ec2go):
     return pathway_to_go
 
 
-def analyze_genome(protein_go_terms, pathway_to_go):
+def analyze_genome(protein_go_terms, pathway_to_go, ec2go_mapping):
     completeness_results = {}
     completed_pathways = []
     annotated_pathways = set()
-    
-    genome_go_set = set()
-    for go_terms in protein_go_terms.values():
-        genome_go_set.update(go_terms)
+    pathway_details = {}
+
+    genome_go_set = set(go_term for go_terms in protein_go_terms.values() for go_term in go_terms)
 
     for pathway, (original_go_term, go_terms_sets) in pathway_to_go.items():
-        if original_go_term in genome_go_set:
-            annotated_pathways.add(pathway)
-            if not go_terms_sets:
-                pathway_complete = True
-            else:
-                pathway_complete = any(all(go_term in genome_go_set for go_term in go_terms) for go_terms in go_terms_sets)
+        # Only proceed if the original GO term is present
+        if original_go_term not in genome_go_set:
+            continue
+
+        annotated_pathways.add(pathway)
+        missing_components = []
+
+        if not go_terms_sets:
+            pathway_complete = True
         else:
-            pathway_complete = False
+            pathway_complete = any(
+                all(go_term in genome_go_set for go_term in combo)
+                for combo in go_terms_sets
+            )
+            if not pathway_complete:
+                for combo in go_terms_sets:
+                    missing_ec_go_terms = [go_term for go_term in combo if go_term not in genome_go_set]
+                    if missing_ec_go_terms:
+                        missing_components.append(missing_ec_go_terms)
 
         completeness_results[pathway] = pathway_complete
         if pathway_complete:
             completed_pathways.append(pathway)
+            
+        if ec2go_mapping and missing_components:
+            mapped = []
+            for go_set in missing_components:
+                ecs = set()
+                for go in go_set:
+                    for ec, gos in ec2go_mapping.items():
+                        if go in gos:
+                            ecs.add(ec)
+                if ecs:
+                    mapped.append(list(ecs))
+            missing_components = mapped
 
-    return completeness_results, completed_pathways, annotated_pathways
+        pathway_details[pathway] = {
+            "complete": pathway_complete,
+            "original_go_term": original_go_term,
+            "missing_components": missing_components
+        }
+
+    return completeness_results, completed_pathways, annotated_pathways, pathway_details
 
 #### COMPLEX COHERENCE ####
 MACROMOLECULAR_COMPLEX = "GO:0032991"
