@@ -1,4 +1,5 @@
 import csv
+import json
 import plotly.express as px
 from flask import Flask, render_template
 from collections import defaultdict
@@ -118,34 +119,53 @@ def evaluation():
 		complex_coherence
 ]
 	gauge_html = plots.create_completeness_gauge_html(completeness_data)
+	
+	context = {
+        'assem_name': assem_name,
+        'essential_percentage': round(essential_percentage, 2),
+        'plot_core_html': plot_core_html,
+        'plot_periph_html': plot_periph_html,
+        'go_categories_core': go_core,
+        'go_categories_periph': go_periph,
+        'found_terms': found_terms,
+        'ec2go_mapping': ec2go_mapping,
+        'complete_has_part_percentage': round(process_coherence, 2),
+        'has_part_data': has_part_protein_details,
+        'complex_coherence': round(complex_coherence, 2),
+        'complex_classifications': complex_classifications,
+        'term_names': term_names,
+        'satisfiable': True,
+        'metacyc_complete_percentage': round(metacyc_pct, 2),
+        'metacyc_completed': total_completed,
+        'metacyc_annotated': total_annotated,
+        'metacyc_incomplete': total_incomplete,
+        'pathway_details': pathway_details,
+        'gauge_html': gauge_html
+    }
 
-	return render_template(
-        'html_output_template.html',
-        assem_name=assem_name,
-        essential_percentage=round(essential_percentage, 2),
-        plot_core_html=plot_core_html,
-        plot_periph_html=plot_periph_html,
-        go_categories_core=go_core,
-        go_categories_periph=go_periph,
-        found_terms=found_terms,
-        ec2go_mapping=ec2go_mapping,
-        complete_has_part_percentage=round(process_coherence, 2),
-        has_part_data=has_part_protein_details,
-        complex_coherence=round(complex_coherence, 2),
-        complex_classifications=complex_classifications,
-        term_names=term_names,
-        satisfiable=True,
-        metacyc_complete_percentage=round(metacyc_pct, 2),
-        metacyc_completed=total_completed,
-        metacyc_annotated=total_annotated,
-        metacyc_incomplete=total_incomplete,
-        pathway_details=pathway_details,
-        gauge_html=gauge_html
-    )
+	return context
+
+
 
 if __name__ == '__main__':
     with app.app_context():
-        html = evaluation()
-        with open('output_report.html', 'w', encoding='utf-8') as f:
+        context = evaluation()
+
+        # Save HTML using full context
+        html = render_template("html_output_template.html", **context)
+        with open("output_report.html", "w", encoding="utf-8") as f:
             f.write(html)
-        print("Saved to output_report.html")
+
+        # Save JSON with selected fields removed
+        json_context = context.copy()
+        json_context.pop("plot_core_html", None)
+        json_context.pop("plot_periph_html", None)
+        json_context.pop("gauge_html", None)
+        json_context.pop("ec2go_mapping", None)
+        json_context.pop("term_names", None)
+
+        import json
+        with open("output_report.json", "w") as f:
+            json.dump(json_context, f, indent=2, default=str)
+
+        print("Saved output_report.html and output_report.json")
