@@ -30,8 +30,7 @@ This tool generates a static HTML and JSON report evaluating Gene Ontology (GO) 
 
 1. Clone the repository:
 
-`https://github.com/bio-ontology-research-group/GAEF.git`
-`cd GAEF`
+```https://github.com/bio-ontology-research-group/GAEF.git cd GAEF```
 
 2. Download Gene Ontology (GO) files:
 
