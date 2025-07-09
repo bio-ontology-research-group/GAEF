@@ -35,6 +35,6 @@ This tool generates a static HTML and JSON report evaluating Gene Ontology (GO) 
 
 2. Download Gene Ontology (GO) files:
 
-`mkdir data`
-`cd data`
-`wget https://release.geneontology.org/2025-03-16/ontology/go-basic.obo`
+```mkdir data```  
+```cd data```  
+```wget https://release.geneontology.org/2025-03-16/ontology/go-basic.obo```
