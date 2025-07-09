@@ -8,17 +8,7 @@ from completeness import read_essential_terms, count_essential_terms
 from utils import get_ancestors, get_specific, Ontology
 from consistency import check_consistency
 import plots
-from coherence import (
-    parse_has_part,
-    check_has_part,
-    parse_ec2go,
-    map_pathways_to_go_terms,
-    analyze_genome,
-    parse_go_ontology,
-    get_all_child_terms,
-    classify_complexes,
-    count_complexes
-)
+import coherence
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
@@ -86,24 +76,24 @@ def evaluation():
 
 	### COHERENCE ###
    # Pathway coherence
-	ec2go_mapping      = parse_ec2go(ec2go_file)
-	pathway_to_go      = map_pathways_to_go_terms(pathway_file, ec2go_mapping)
-	_, metacyc_completed, metacyc_annotated, pathway_details = analyze_genome(protein_go_terms_ancestors, pathway_to_go, ec2go_mapping)
+	ec2go_mapping      = coherence.parse_ec2go(ec2go_file)
+	pathway_to_go      = coherence.map_pathways_to_go_terms(pathway_file, ec2go_mapping)
+	_, metacyc_completed, metacyc_annotated, pathway_details = coherence.analyze_genome(protein_go_terms_ancestors, pathway_to_go, ec2go_mapping)
 	metacyc_pct       = (len(metacyc_completed) / len(metacyc_annotated)) * 100
 	total_completed   = len(metacyc_completed)
 	total_annotated   = len(metacyc_annotated)
 	total_incomplete  = total_annotated - total_completed
 
 	# Process coherence
-	has_part_dict = parse_has_part(has_part_file)
-	process_coherence, has_part_protein_details = check_has_part(protein_go_terms, has_part_dict)
+	has_part_dict = coherence.parse_has_part(has_part_file)
+	process_coherence, has_part_protein_details = coherence.check_has_part(protein_go_terms, has_part_dict)
 
 	# Protein complex coherence
-	term_to_children, _, _ = parse_go_ontology(ontology_file)
-	complex_child_terms = get_all_child_terms(MACROMOLECULAR_COMPLEX, term_to_children)
+	term_to_children, _, _ = coherence.parse_go_ontology(ontology_file)
+	complex_child_terms = coherence.get_all_child_terms(MACROMOLECULAR_COMPLEX, term_to_children)
 	complex_child_terms.add(MACROMOLECULAR_COMPLEX)
-	complex_classifications, _ = classify_complexes(protein_go_terms_ancestors, complex_child_terms)
-	coherent_count, incoherent_count = count_complexes(complex_classifications)
+	complex_classifications, _ = coherence.classify_complexes(protein_go_terms_ancestors, complex_child_terms)
+	coherent_count, incoherent_count = coherence.count_complexes(complex_classifications)
 	complex_coherence = (coherent_count / (coherent_count + incoherent_count)) * 100 if (coherent_count + incoherent_count) > 0 else 0
 	term_names = {t: go.get_term(t)['name'] for t in complex_classifications}
 
