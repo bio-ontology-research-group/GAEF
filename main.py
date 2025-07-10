@@ -24,8 +24,6 @@ def load_annotations(annotation_file):
                 protein_go_terms[protein_id] = go_terms
     return protein_go_terms
 
-# assem_name = "GCF_000007085.1_ASM708v1"
-# annotation_file = "GCF_000007085.1_ASM708v1_IPscan_GO.tsv"
 term_file = "constraints/essential_terms.tsv"
 has_part_file = "constraints/has_part_relations.txt"
 ec2go_file = "constraints/ec2go_v2025-03-16"
@@ -137,11 +135,10 @@ def evaluation(assem_name, annotation_file):
 	return context
 
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluate GO annotation completeness/coherence/consistency.')
     parser.add_argument('--assem_name', required=True, help='Assembly name (e.g., GCF_000007085.1_ASM708v1)')
-    parser.add_argument('--annotation_file', required=True, help='Path to the GO annotation file')
+    parser.add_argument('--annotation_file', required=True, help='Path to tab-separated GO annotation file (protein_id	GO:term1	GO:term2)')
 
     args = parser.parse_args()
     
@@ -150,7 +147,7 @@ if __name__ == '__main__':
 
         # Save HTML using full context
         html = render_template("html_output_template.html", **context)
-        with open("output_report.html", "w", encoding="utf-8") as f:
+        with open(args.assem_name + "_report.html", "w", encoding="utf-8") as f:
             f.write(html)
 
         # Save JSON with selected fields removed
@@ -161,8 +158,7 @@ if __name__ == '__main__':
         json_context.pop("ec2go_mapping", None)
         json_context.pop("term_names", None)
 
-        import json
-        with open("output_report.json", "w") as f:
+        with open(args.assem_name + "_report.json", "w") as f:
             json.dump(json_context, f, indent=2, default=str)
 
         print("Saved output_report.html and output_report.json")
