@@ -1,5 +1,6 @@
 import csv
 import json
+import argparse
 import plotly.express as px
 from flask import Flask, render_template
 from collections import defaultdict
@@ -23,8 +24,8 @@ def load_annotations(annotation_file):
                 protein_go_terms[protein_id] = go_terms
     return protein_go_terms
 
-assem_name = "GCF_000007085.1_ASM708v1"
-annotation_file = "GCF_000007085.1_ASM708v1_IPscan_GO.tsv"
+# assem_name = "GCF_000007085.1_ASM708v1"
+# annotation_file = "GCF_000007085.1_ASM708v1_IPscan_GO.tsv"
 term_file = "constraints/essential_terms.tsv"
 has_part_file = "constraints/has_part_relations.txt"
 ec2go_file = "constraints/ec2go_v2025-03-16"
@@ -35,7 +36,7 @@ MACROMOLECULAR_COMPLEX = "GO:0032991"
 HOMODIMERIZATION = "GO:0042803"
 
 # @app.route('/')
-def evaluation():
+def evaluation(assem_name, annotation_file):
 	# Load annotations
 	protein_go_terms = load_annotations(annotation_file)
 	protein_go_terms_ancestors = get_ancestors(protein_go_terms)
@@ -124,7 +125,7 @@ def evaluation():
         'complex_coherence': round(complex_coherence, 2),
         'complex_classifications': complex_classifications,
         'term_names': term_names,
-        'satisfiable': True,
+      #   'satisfiable': True,
         'metacyc_complete_percentage': round(metacyc_pct, 2),
         'metacyc_completed': total_completed,
         'metacyc_annotated': total_annotated,
@@ -138,8 +139,14 @@ def evaluation():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Evaluate GO annotation completeness/coherence/consistency.')
+    parser.add_argument('--assem_name', required=True, help='Assembly name (e.g., GCF_000007085.1_ASM708v1)')
+    parser.add_argument('--annotation_file', required=True, help='Path to the GO annotation file')
+
+    args = parser.parse_args()
+    
     with app.app_context():
-        context = evaluation()
+        context = evaluation(args.assem_name, args.annotation_file)
 
         # Save HTML using full context
         html = render_template("html_output_template.html", **context)
