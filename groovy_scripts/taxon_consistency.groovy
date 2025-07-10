@@ -29,7 +29,7 @@ class Result {
 }
 
 if (args.length != 2) {
-    println "Usage: groovy check_constraints.groovy <input_file> <OUTPUT_FILE>"
+    println "Usage: groovy taxon_consistency.groovy <input_file> <OUTPUT_FILE>"
     System.exit(1)
 }
 
@@ -41,8 +41,8 @@ def config = manager.getOntologyLoaderConfiguration()
     .setLoadAnnotationAxioms(false)
 
 println "Loading ontologies..."
-def taxonFile = new File("ncbitaxon_with_disjointness.owl")
-def goTaxonFile = new File("go-taxon-groupings.owl")
+def taxonFile = new File("constraints/ncbitaxon_with_disjointness.owl")
+def goTaxonFile = new File("constraints/go-taxon-groupings.owl")
 
 if (!taxonFile.exists() || !goTaxonFile.exists()) {
     println "Error: Ontology file(s) not found"
@@ -78,14 +78,17 @@ inputFile.eachLine { line ->
         return
     }
     def parts = line.split("\t", -1)
-    if (parts.length < 5) return
-    def genomeName = parts[0].trim().replaceAll(".tsv", "")
+    if (parts.length < 4) {
+		println "Skipping line (too few columns): ${line}"
+		return
+	 }
+    def genomeName = inputFile.name.replaceAll("_consistency.tsv", "")
     def annotation = new GenomeAnnotation(
-        genomeName: genomeName,
-        proteinName: parts[1].trim(),
-        goId: parts[2].trim(),
-        neverInTaxon: parts[3].trim() ? parts[3].split(",").collect { it.trim() } as Set : [] as Set,
-        onlyInTaxon: parts[4].trim() ? parts[4].split(",").collect { it.trim() } as Set : [] as Set
+		genomeName: genomeName,
+		proteinName: parts[0].trim(),
+		goId: parts[1].trim(),
+		neverInTaxon: parts[2].trim() ? parts[2].split(",").collect { it.trim() } as Set : [] as Set,
+		onlyInTaxon: parts[3].trim() ? parts[3].split(",").collect { it.trim() } as Set : [] as Set
     )
     genomeAnnotationsMap.computeIfAbsent(genomeName) { [] } << annotation
 }

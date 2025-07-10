@@ -148,12 +148,17 @@
 					<div class="divider"></div>
 					<div class="card-body">
 						<div class="status-group">
-							{% if satisfiable %}
-								<span class="material-symbols-outlined status-icon found">check_circle</span>
-								<span class="status-text found">Satisfiable</span>
+							{% if satisfiable is defined %}
+								{% if satisfiable %}
+									<span class="material-symbols-outlined status-icon found">check_circle</span>
+									<span class="status-text found">Satisfiable</span>
+								{% else %}
+									<span class="material-symbols-outlined status-icon missing">cancel</span>
+									<span class="status-text missing">Unsatisfiable</span>
+								{% endif %}
 							{% else %}
-								<span class="material-symbols-outlined status-icon missing">cancel</span>
-								<span class="status-text missing">Unsatisfiable</span>
+								<span class="material-symbols-outlined status-icon unknown">help</span>
+								<span class="status-text unknown">Unknown (Groovy not run)</span>
 							{% endif %}
 						</div>
 					</div>

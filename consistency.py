@@ -39,3 +39,4 @@ def check_consistency(protein_go_terms, constraints_file, output_file):
                         ",".join(only_taxa)
                     ]
                     out.write("\t".join(row) + "\n")
+    return output_file

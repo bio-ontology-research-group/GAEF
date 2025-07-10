@@ -1,6 +1,8 @@
 import csv
 import json
+import os
 import argparse
+import subprocess
 import plotly.express as px
 from flask import Flask, render_template
 from collections import defaultdict
@@ -34,12 +36,19 @@ MACROMOLECULAR_COMPLEX = "GO:0032991"
 HOMODIMERIZATION = "GO:0042803"
 
 # @app.route('/')
-def evaluation(assem_name, annotation_file):
+def evaluation(assembly_name, annotation_file, groovy_flag=False):
 	# Load annotations
 	protein_go_terms = load_annotations(annotation_file)
 	protein_go_terms_ancestors = get_ancestors(protein_go_terms)
 	protein_go_terms_specific = get_specific(protein_go_terms)
 	go = Ontology(ontology_file)
+	specific_terms_file = f"{assembly_name}_specific_GO_terms.tsv"
+
+	with open(specific_terms_file, "w") as f:
+		for protein, terms in protein_go_terms_specific.items():
+			if terms:  # skip proteins with no terms
+				f.write(protein + "\t" + "\t".join(sorted(terms)) + "\n")
+
 
 	### COMPLETENESS ###
 	# Essential terms
@@ -98,19 +107,33 @@ def evaluation(assem_name, annotation_file):
 
 	### CONSISTENCY ###
 	# Taxonomic consistency
-	check_consistency(protein_go_terms, taxa_constraints_file, output_file="GCF_000005845.2_ASM584v2_consistency.tsv")
-
+	consistency_file =  check_consistency(protein_go_terms_ancestors, taxa_constraints_file, output_file = assembly_name + "_consistency.tsv")
+	if groovy_flag:
+		print("Evaluating taxonomic consistency with Groovy.")
+		groovy_script = "groovy_scripts/taxon_consistency.groovy"
+		groovy_output_file = f"{assembly_name}_taxon_explanations.tsv"
+		try:
+			result = subprocess.run(["groovy", groovy_script, consistency_file, groovy_output_file], capture_output=True, text=True, check=True)
+			print("Groovy script output:")
+			print(result.stdout)
+			if result.stderr:
+				print("Groovy script error output:")
+				print(result.stderr)
+		except subprocess.CalledProcessError as e:
+			print("Error running Groovy script:")
+			print(e.stderr)
+            
 	### OVERVIEW ###
 	completeness_data = [
 		essential_percentage,
 		metacyc_pct,
 		process_coherence, 
-		complex_coherence
-]
+		complex_coherence]
+     
 	gauge_html = plots.create_completeness_gauge_html(completeness_data)
 	
 	context = {
-        'assem_name': assem_name,
+        'assembly_name': assembly_name,
         'essential_percentage': round(essential_percentage, 2),
         'plot_core_html': plot_core_html,
         'plot_periph_html': plot_periph_html,
@@ -123,7 +146,6 @@ def evaluation(assem_name, annotation_file):
         'complex_coherence': round(complex_coherence, 2),
         'complex_classifications': complex_classifications,
         'term_names': term_names,
-      #   'satisfiable': True,
         'metacyc_complete_percentage': round(metacyc_pct, 2),
         'metacyc_completed': total_completed,
         'metacyc_annotated': total_annotated,
@@ -131,23 +153,57 @@ def evaluation(assem_name, annotation_file):
         'pathway_details': pathway_details,
         'gauge_html': gauge_html
     }
+   
+	if groovy_flag:
+		satisfiable = True
+		if os.path.exists(groovy_output_file):
+			with open(groovy_output_file, encoding="utf-8") as f:
+				next(f)  # skip header
+				for line in f:
+					parts = line.strip().split("\t")
+					if len(parts) >= 2 and parts[1].lower() == "false":
+						satisfiable = False
+						break
+			context["satisfiable"] = satisfiable
+
+	if groovy_flag:
+		print("Calculating Information Content (IC) with Groovy.")
+		groovy_IC = "groovy_scripts/ICVector.groovy"
+		groovy_IC_output_file = f"{assembly_name}_IC.tsv"
+		try:
+			result = subprocess.run(["groovy", groovy_IC, specific_terms_file, groovy_IC_output_file], capture_output=True, text=True, check=True)
+			print("Groovy script output:")
+			print(result.stdout)
+			if result.stderr:
+				print("Groovy script error output:")
+				print(result.stderr)
+		except subprocess.CalledProcessError as e:
+			print("Error running Groovy script:")
+			print(e.stderr)
+
+	if groovy_flag:
+		# Calculate IC depth and breadth
+		depth, breadth, normalized_breadth = calculate_ic_depth_breadth(groovy_IC_output_file)
+		context["ic_depth"] = depth
+		context["ic_breadth"] = breadth
+		context["normalized_ic_breadth"] = normalized_breadth
 
 	return context
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Evaluate GO annotation completeness/coherence/consistency.')
-    parser.add_argument('--assem_name', required=True, help='Assembly name (e.g., GCF_000007085.1_ASM708v1)')
+    parser.add_argument('--assembly_name', required=True, help='Assembly name (e.g., GCF_000007085.1_ASM708v1)')
     parser.add_argument('--annotation_file', required=True, help='Path to tab-separated GO annotation file (protein_id	GO:term1	GO:term2)')
+    parser.add_argument('--groovy', action='store_true', help='Run Groovy scripts for IC calculation and taxonomic consistency')
 
     args = parser.parse_args()
     
     with app.app_context():
-        context = evaluation(args.assem_name, args.annotation_file)
+        context = evaluation(args.assembly_name, args.annotation_file, args.groovy)
 
         # Save HTML using full context
         html = render_template("html_output_template.html", **context)
-        with open(args.assem_name + "_report.html", "w", encoding="utf-8") as f:
+        with open(args.assembly_name + "_report.html", "w", encoding="utf-8") as f:
             f.write(html)
 
         # Save JSON with selected fields removed
@@ -158,7 +214,8 @@ if __name__ == '__main__':
         json_context.pop("ec2go_mapping", None)
         json_context.pop("term_names", None)
 
-        with open(args.assem_name + "_report.json", "w") as f:
+        with open(args.assembly_name + "_report.json", "w") as f:
             json.dump(json_context, f, indent=2, default=str)
 
-        print("Saved output_report.html and output_report.json")
+        print(f"Saved {args.assembly_name}_report.html and {args.assembly_name}_report.json")
+        
