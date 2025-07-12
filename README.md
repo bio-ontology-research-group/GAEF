@@ -24,6 +24,10 @@ This tool generates a static HTML and JSON report evaluating Gene Ontology (GO) 
 - `pandas`
 - `numpy`
 
+
+For generating constriants:
+- `pythoncyc`
+
 ---
 
 ## Setup
@@ -58,3 +62,34 @@ This tool generates a static HTML and JSON report evaluating Gene Ontology (GO) 
 | `{assembly_name}_specific_GO_terms.tsv` | Most specific GO classes retained for each protein                                           |
 
 
+---
+
+### Generating constraint files
+
+Constraint files in the repository are generated using GO release 2025-03-16. To generate the constraint files for a different GO version:
+
+
+#### Pathway constraints
+
+1. Download go.obo:  
+```wget https://release.geneontology.org/{VERSION}/ontology/go.obo```  
+
+2. Map GO classes to MetaCyc pathway IDs:  
+```python generate_constraints/GO2Metacyc.py {GO_VERSION} {/PATH/TO/go.obo}```  
+
+3. Extract pathway EC numbers:  
+```python generate_constraints/extract_ECs.py {GO_VERSION}```  
+
+4. Download EC2GO:  
+```wget http://www.geneontology.org/external2go/ec2go```  
+
+#### Taxon constraints
+
+1. Download GO constraint files and NCBI Taxonomy:  
+```wget https://release.geneontology.org/{VERSION}/ontology/imports/go-taxon-groupings.owl```  
+```wget https://release.geneontology.org/{VERSION}/ontology/imports/go-computed-taxon-constraints.obo```  
+```wget http://purl.obolibrary.org/obo/ncbitaxon/{VERSION}/ncbitaxon.owl```  
+
+2. Create constraints files:  
+```groovy generate_constraints/extract_constraints.groovy```  
+```groovy generate_constraints/add_taxon_disjointness.groovy```
