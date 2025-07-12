@@ -37,7 +37,7 @@ This tool generates a static HTML and JSON report evaluating Gene Ontology (GO) 
 
 ```mkdir data```  
 ```cd data```  
-```wget https://release.geneontology.org/2025-03-16/ontology/go-basic.obo```
+```wget https://release.geneontology.org/2025-03-16/ontology/go-basic.obo```  
 ```wget https://release.geneontology.org/2025-03-16/ontology/go-basic.owl```
 
 3. Run framework:
