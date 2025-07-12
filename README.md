@@ -41,12 +41,13 @@ This tool generates a static HTML and JSON report evaluating Gene Ontology (GO) 
 ```wget https://release.geneontology.org/2025-03-16/ontology/go-basic.owl```
 
 ---
-## Outputs
+| Filename                                | Description                                                                                   |
+|-----------------------------------------|-----------------------------------------------------------------------------------------------|
+| `{assembly_name}_report.html`           | HTML-formatted report with detailed metrics, figures, and searchable tables                  |
+| `{assembly_name}_report.json`           | JSON-formatted report with detailed metrics                                                  |
+| `{assembly_name}_consistency.tsv`       | 'Never in taxon' and 'only in taxon' constraints for each protein and GO annotation          |
+| `{assembly_name}_taxon_explanations.tsv`| Taxonomic consistency satisfiability and HSTExplanationGenerator explanations (if any)       |
+| `{assembly_name}_IC.tsv`                | Information Content (IC) for each GO class                                                   |
+| `{assembly_name}_specific_GO_terms.tsv` | Most specific GO classes retained for each protein                                           |
 
-- {assembly_name}_report.html: html-formatted report including detailed results for each metrics, as well as figures and searchable tables
-- {assembly_name}_report.json: json-formatted report including detailed results for each metrics
-- {assembly_name}_consistency.tsv: 'never in taxon' and 'only in taxon' constraints for each protein and GO annotation
-- {assembly_name}_taxon_explanations.tsv: taxonomic consistency satisfiability and accompanying HSTExplanationGenerator explanations (if any)
-- {assembly_name}_IC.tsv: Information Content (IC) for each GO class
-- {assembly_name}_specific_GO_terms.tsv: only the most specific GO classes retained for each protein
 
