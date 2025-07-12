@@ -40,7 +40,14 @@ This tool generates a static HTML and JSON report evaluating Gene Ontology (GO) 
 ```wget https://release.geneontology.org/2025-03-16/ontology/go-basic.obo```
 ```wget https://release.geneontology.org/2025-03-16/ontology/go-basic.owl```
 
+3. Run framework:
+
+```python main.py --assembly_name {assembly name} --annotation_file {annotation file} --groovy (optional)```
+
 ---
+
+## Outputs
+
 | Filename                                | Description                                                                                   |
 |-----------------------------------------|-----------------------------------------------------------------------------------------------|
 | `{assembly_name}_report.html`           | HTML-formatted report with detailed metrics, figures, and searchable tables                  |
