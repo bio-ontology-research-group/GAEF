@@ -49,6 +49,13 @@ For generating constriants:
 ```python main.py --assembly_name {assembly name} --annotation_file {annotation file} --groovy (optional)```
 
 ---
+## Input
+
+Input files should be TAB-separated, with the protein ID in the first column, followed by TAB-separated GO:XXXXXXX classes.  
+
+*Examples of input file: [examples](examples/input)*
+
+---
 
 ## Outputs
 
@@ -61,6 +68,7 @@ For generating constriants:
 | `{assembly_name}_IC.tsv`                | Information Content (IC) for each GO class                                                   |
 | `{assembly_name}_specific_GO_terms.tsv` | Most specific GO classes retained for each protein                                           |
 
+*Examples of output files: [examples](examples/outputs)*
 
 ---
 
@@ -91,5 +99,5 @@ Constraint files in the repository are generated using GO release 2025-03-16. To
 ```wget http://purl.obolibrary.org/obo/ncbitaxon/{VERSION}/ncbitaxon.owl```  
 
 2. Create constraints files:  
-```groovy generate_constraints/[extract_constraints.groovy](generate_constraints/extract_constraints.groovy)```  
+```groovy generate_constraints/extract_constraints.groovy```  
 ```groovy generate_constraints/add_taxon_disjointness.groovy```
