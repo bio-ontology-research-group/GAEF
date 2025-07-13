@@ -91,5 +91,5 @@ Constraint files in the repository are generated using GO release 2025-03-16. To
 ```wget http://purl.obolibrary.org/obo/ncbitaxon/{VERSION}/ncbitaxon.owl```  
 
 2. Create constraints files:  
-```groovy generate_constraints/extract_constraints.groovy```  
+```groovy generate_constraints/[extract_constraints.groovy](generate_constraints/extract_constraints.groovy)```  
 ```groovy generate_constraints/add_taxon_disjointness.groovy```
