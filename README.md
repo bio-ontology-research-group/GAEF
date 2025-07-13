@@ -74,13 +74,13 @@ Input files should be TAB-separated, with the protein ID in the first column, fo
 
 ### Generating constraint files
 
-Constraint files in the repository are generated using GO release 2025-03-16. To generate the constraint files for a different GO version:
+Constraint files in the repository were generated using GO release 2025-03-16. To generate the constraint files for a different GO version:
 
 
 #### Pathway constraints
 
 1. Download go.obo:  
-```wget https://release.geneontology.org/{VERSION}/ontology/go.obo```  
+```wget https://release.geneontology.org/{GO_VERSION}/ontology/go.obo```  
 
 2. Map GO classes to MetaCyc pathway IDs:  
 ```python generate_constraints/GO2Metacyc.py {GO_VERSION} {/PATH/TO/go.obo}```  
