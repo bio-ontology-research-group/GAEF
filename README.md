@@ -98,6 +98,6 @@ Constraint files in the repository were generated using GO release 2025-03-16. T
 ```wget https://release.geneontology.org/{VERSION}/ontology/imports/go-computed-taxon-constraints.obo```  
 ```wget http://purl.obolibrary.org/obo/ncbitaxon/{VERSION}/ncbitaxon.owl```  
 
-2. Create constraints files:  
+2. Create constraint files:  
 ```groovy generate_constraints/extract_constraints.groovy```  
 ```groovy generate_constraints/add_taxon_disjointness.groovy```
