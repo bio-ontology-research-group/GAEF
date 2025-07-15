@@ -2,6 +2,9 @@
 
 This tool generates a static HTML and JSON report evaluating Gene Ontology (GO) class annotations using the following metrics: **completeness**, **coherence**, and **consistency**. It integrates multiple constraint sources (e.g., EC2GO mappings, GO structure, NCBITaxonomy).
 
+[![DOI](https://zenodo.org/badge/1014841170.svg)](https://doi.org/10.5281/zenodo.15902372)
+
+
 ---
 
 ## Evaluation Metrics
