@@ -26,6 +26,7 @@ This tool generates a static HTML and JSON report evaluating Gene Ontology (GO) 
 - `plotly`
 - `pandas`
 - `numpy`
+- `requests`
 
 
 For generating constriants:
